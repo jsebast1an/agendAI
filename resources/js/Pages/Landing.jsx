@@ -1,10 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import Pricing from '@/Components/Pricing';
+import Reviews, { demoReviews } from '@/Components/Reviews';
+
 export default function Landing() {
     return (
         <>
         <Head title="AgendAI — Agenda automática con WhatsApp" />
-        <div className="h-screen w-full bg-neutral-950 text-neutral-100 relative">
+        <div className="w-full bg-neutral-950 text-neutral-100 relative">
 
                 {/* Contenedor principal */}
             <div className="mx-auto flex h-full max-w-6xl flex-col px-6">
@@ -106,16 +108,14 @@ export default function Landing() {
 
                     {/* Pricing Component */}
                     <Pricing onClose={() => {}} />
+
+                    <Reviews items={demoReviews} cols={3} className="py-2" />
+
+                    <article class="bg-red-500 p-4 min-h-[100px]">
+                    Contenido de prueba
+                    </article>
+
                 </main>
-
-
-
-
-
-
-
-
-
 
                 {/* Footer mini */}
                 <footer className="py-4 text-center text-xs text-neutral-500">
