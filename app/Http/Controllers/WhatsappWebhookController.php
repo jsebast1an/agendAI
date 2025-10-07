@@ -18,7 +18,7 @@ class WhatsappWebhookController extends Controller
         return response('Invalid verify token', 403);
     }
 
-    public function handle(Request $r, \App\Services\WhatsappService $wa)
+    public function handle(Request $r, WhatsappService $wa, OpenAIService $openai)
     {
         try {
             $payload = $r->all();
@@ -33,21 +33,20 @@ class WhatsappWebhookController extends Controller
             $from = data_get($msg, 'from');
             $text =
                 data_get($msg, 'text.body') ??
-                data_get($msg, 'button.text') ??
-                data_get($msg, 'interactive.button_reply.title') ??
-                data_get($msg, 'interactive.list_reply.title') ??
-                data_get($msg, 'image.caption') ??
                 '[Contenido no textual]';
 
-            Log::info('FROM: ', $msg);
-            Log::info('WA inbound RAW: '.$r->getContent());
+            Log::channel('api')->info('FROM: ', $msg);
+            // Log::info('WA inbound RAW: '.$r->getContent());
+
+            $responseAI = $openai->replyBasic('21231', $text);
+            Log::channel('api')->info("ANSWER: {$responseAI}");
 
             // Respuesta fija para confirmar ida y vuelta
-            $res = $wa->sendText($from, "Recibí tu mensaje ✔️: {$text}");
+            $res = $wa->sendText($from, "Respuesta: {$responseAI}");
 
             return response()->json(['ok' => $res]);
         } catch (\Throwable $e) {
-            Log::error('WA webhook ERROR', ['msg'=>$e->getMessage(), 'trace'=>$e->getTraceAsString()]);
+            Log::channel('api')->error('WA webhook ERROR', ['msg'=>$e->getMessage(), 'trace'=>$e->getTraceAsString()]);
             // 200 para que Meta no reintente en bucle mientras depuras
             return response()->json(['ok' => false], 200);
         }
