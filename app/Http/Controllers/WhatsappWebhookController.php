@@ -13,7 +13,7 @@ class WhatsappWebhookController extends Controller
     {
         $token     = $r->query('hub_verify_token') ?? $r->query('hub.verify_token');
         if ($token === config('services.waba.verify')) {
-            return $r->get('hub_challenge');
+            return $r->get('hub_challenge') ?? $r->get('hub.challenge');
         }
         return response('Invalid verify token', 403);
     }

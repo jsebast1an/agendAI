@@ -1,5 +1,4 @@
 <?php
-// app/Services/OpenAIService.php
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -11,18 +10,18 @@ class OpenAIService
     // guarda 6 turnos por usuario en cache (simple)
     protected function historyKey(string $user): string { return "wa_hist_".$user; }
 
-    public function replyBasic(string $user, string $userText) : string
+    public function replyBasic(string $user, string $userText): string
     {
         // $history = Cache::get($this->historyKey($user), []);
 
         $systemPrompt = "
-            Eres el asistente digital de un teatro en Quito.
-            Respondes de forma amable.
-            Hay parqueadero disponible por $2.
-            Aceptamos tarjeta débito y crédito.
-            Las funciones se consultan según fecha.
-            Si no sabes algo, ofrece transferir a humano.
-            ";
+                    Eres el asistente digital de un teatro en Quito.
+                    Respondes de forma amable.
+                    Hay parqueadero disponible por USD 2.
+                    Aceptamos tarjeta debito y credito.
+                    Las funciones se consultan segun fecha.
+                    Si no sabes algo, ofrece transferir a humano.
+                    ";
 
         $resp = Http::withToken(config('services.openai.key'))
             ->post('https://api.openai.com/v1/responses', [
@@ -32,9 +31,8 @@ class OpenAIService
                 "temperature" => 0.5
             ])->json();
 
-        $answer = $resp['output'][0]['content'][0]['text'] ?? "¡Hola! ¿En qué puedo ayudarte? 🙂";
+        $answer = $resp['output'][0]['content'][0]['text'] ?? "Hola. En que puedo ayudarte?";
 
-        // actualiza historial (máx 6 mensajes)
         // $history[] = ["role"=>"user","content"=>$userText];
         // $history[] = ["role"=>"assistant","content"=>$answer];
         // $history = array_slice($history, -6);

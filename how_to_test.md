@@ -35,7 +35,7 @@ In Meta App Dashboard:
 ```
 https://<your-ngrok-subdomain>.ngrok-free.app/api/webhook/whatsapp
 ```
-
+- Select product 'business whatsapp'
 - Set the **Verify Token** to match your `.env` value `WABA_VERIFY_TOKEN`.
 - Click **Verify and Save**.
 - Subscribe to **messages** event.
