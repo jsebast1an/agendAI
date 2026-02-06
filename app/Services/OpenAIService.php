@@ -15,11 +15,20 @@ class OpenAIService
     {
         // $history = Cache::get($this->historyKey($user), []);
 
+        $systemPrompt = "
+            Eres el asistente digital de un teatro en Quito.
+            Respondes de forma amable.
+            Hay parqueadero disponible por $2.
+            Aceptamos tarjeta débito y crédito.
+            Las funciones se consultan según fecha.
+            Si no sabes algo, ofrece transferir a humano.
+            ";
+
         $resp = Http::withToken(config('services.openai.key'))
             ->post('https://api.openai.com/v1/responses', [
                 "model" => "gpt-4.1",
                 "input" => $userText,
-                "instructions" => "Eres AgendAI, recepcionista amable y un poco 'closer'. Responde en 1-3 líneas, claro, cordial y útil. Si el usuario pregunta por precios/horarios, explica breve y ofrece seguir conversando. No inventes datos específicos del negocio todavía.",
+                "instructions" => $systemPrompt,
                 "temperature" => 0.5
             ])->json();
 
@@ -30,7 +39,7 @@ class OpenAIService
         // $history[] = ["role"=>"assistant","content"=>$answer];
         // $history = array_slice($history, -6);
         // Cache::put($this->historyKey($user), $history, now()->addHours(6));
-        // Log::channel('api')->info("ANSWER: {$answer}");
+        Log::channel('api')->info("ANSWER: {$answer}");
 
         return $answer;
     }

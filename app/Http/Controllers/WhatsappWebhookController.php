@@ -42,7 +42,7 @@ class WhatsappWebhookController extends Controller
             Log::channel('api')->info("ANSWER: {$responseAI}");
 
             // Respuesta fija para confirmar ida y vuelta
-            $res = $wa->sendText($from, "Respuesta: {$responseAI}");
+            $res = $wa->sendText($from, "{$responseAI}");
 
             return response()->json(['ok' => $res]);
         } catch (\Throwable $e) {
