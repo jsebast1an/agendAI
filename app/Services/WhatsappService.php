@@ -14,7 +14,7 @@ class WhatsappService
         $to = app()->environment('local', 'development')
             ? (config('services.waba.test_to') ?: $to)
             : $to;
-
+        Log::channel('api')->info('to:' . $to);
         $res = Http::withToken(config('services.waba.token'))
             ->post($url, [
                 "messaging_product" => "whatsapp",

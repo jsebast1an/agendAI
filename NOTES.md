@@ -1,4 +1,4 @@
-# Project: AgendAI – Teatro San Gabriel
+# Project: AgendAI - Teatro San Gabriel
 
 ## Objective
 
@@ -14,8 +14,8 @@ The assistant must:
 - Maintain conversational memory (do not restart greetings if the same user sends another message).
 - Support multiple concurrent users messaging at the same time.
 
-This is not a simple chatbot.  
-It must behave like a professional digital receptionist — natural, helpful, and context-aware.
+This is not a simple chatbot.
+It must behave like a professional digital receptionist - natural, helpful, and context-aware.
 
 ---
 
@@ -26,15 +26,16 @@ It must behave like a professional digital receptionist — natural, helpful, an
 - UI: TailwindCSS
 - Integration: WhatsApp Cloud API
 - LLM: OpenAI API (ChatGPT)
-- Database: MySQL (not yet implemented)
+- Database: MySQL
 
 Current state:
 
 - WhatsApp messages reach a Laravel webhook.
 - The webhook sends messages to OpenAI and returns a response.
-- There is no conversational memory.
-- No tools / structured actions are implemented.
-- No database schema exists yet.
+- Conversational memory is stored in the database (conversations + messages).
+- The assistant loads only the last N messages into context (default 10) but keeps all messages for analytics.
+- No tools / structured actions are implemented yet.
+- Database schema exists for conversation memory (no plays/functions tables yet).
 - No functions or ticket system implemented yet.
 
 ---
@@ -70,6 +71,17 @@ Keep the architecture simple and clean.
 - Business rules live strictly in the backend.
 - The assistant must feel human and professional.
 - The system must be scalable for multiple simultaneous conversations.
+
+---
+
+## Latest Status (February 6, 2026)
+
+- WhatsApp webhook is working with ngrok in dev.
+- Memory is stored in DB tables:
+  - `conversations` (per phone number)
+  - `conversation_messages` (all messages kept)
+- The app builds AI context from the most recent N messages.
+- Dev override can send replies to a test number via `WABA_TEST_TO`.
 
 ---
 

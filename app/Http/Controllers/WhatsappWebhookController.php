@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\OpenAIService;
 use App\Services\WhatsappService;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -36,13 +37,35 @@ class WhatsappWebhookController extends Controller
                 '[Contenido no textual]';
 
             Log::channel('api')->info('FROM: ', $msg);
-            // Log::info('WA inbound RAW: '.$r->getContent());
 
-            $responseAI = $openai->replyBasic('21231', $text);
+            $conversation = Conversation::firstOrCreate(
+                ['phone_number' => $from ?? 'unknown'],
+                ['conversation_status' => 'active', 'handoff_to_human' => false]
+            );
+
+            $memoryLimit = (int) config('services.waba.memory_limit', 10);
+            $history = $conversation->messages()
+                ->orderBy('created_at', 'desc')
+                ->take($memoryLimit)
+                ->get()
+                ->reverse()
+                ->values();
+
+            $conversation->messages()->create([
+                'role' => 'user',
+                'content' => $text,
+            ]);
+
+            $responseAI = $openai->replyBasic($from ?? 'unknown', $text, $history);
             Log::channel('api')->info("ANSWER: {$responseAI}");
 
             // Respuesta fija para confirmar ida y vuelta
-            $res = $wa->sendText($from, "{$responseAI}");
+            $res = $wa->sendText('5491126546323', "{$responseAI}");
+
+            $conversation->messages()->create([
+                'role' => 'assistant',
+                'content' => $responseAI,
+            ]);
 
             return response()->json(['ok' => $res]);
         } catch (\Throwable $e) {

@@ -28,17 +28,18 @@ Copy the HTTPS URL ngrok gives you.
 ## 3) Configure Meta Webhook
 
 In Meta App Dashboard:
-
-- Go to Webhooks.
+-
+- In 'https://developers.facebook.com/' Go to Webhooks.
 - Under **WhatsApp Business Account**, set the Callback URL to:
 
 ```
 https://<your-ngrok-subdomain>.ngrok-free.app/api/webhook/whatsapp
 ```
-- Select product 'business whatsapp'
+
 - Set the **Verify Token** to match your `.env` value `WABA_VERIFY_TOKEN`.
 - Click **Verify and Save**.
 - Subscribe to **messages** event.
+- Generate token access in 'Configuración de la API'
 
 ## 4) Send a test message
 
