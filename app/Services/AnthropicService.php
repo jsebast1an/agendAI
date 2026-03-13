@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\ToolCallLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -132,6 +133,8 @@ class AnthropicService
                 'success' => !$isError,
             ]);
 
+            $this->persistToolLog($flowContext, $name, $input, $result, $durationMs, $isError);
+
             $this->updateContext($conversationContext, $name, $input, $result);
 
             $results[] = [
@@ -172,6 +175,31 @@ class AnthropicService
     {
         if ($conversation && !empty($context)) {
             $conversation->update(['context' => $context]);
+        }
+    }
+
+    private function persistToolLog(array $flowContext, string $toolName, array $input, mixed $result, float $durationMs, bool $isError): void
+    {
+        if (!$flowContext['org_id']) {
+            return;
+        }
+
+        try {
+            ToolCallLog::create([
+                'organization_id' => $flowContext['org_id'],
+                'conversation_id' => $flowContext['conversation_id'] ?? null,
+                'patient_id' => $flowContext['patient_id'] ?? null,
+                'tool_name' => $toolName,
+                'input' => $input,
+                'result' => $result,
+                'duration_ms' => (int) $durationMs,
+                'success' => !$isError,
+                'error_message' => $isError ? ($result['error'] ?? null) : null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('api')->warning('Failed to persist tool call log', [
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
