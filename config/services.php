@@ -35,6 +35,10 @@ return [
         ],
     ],
     'openai' => ['key' => env('OPENAI_API_KEY')],
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514'),
+    ],
     'waba'   => [
         'token' => env('WABA_TOKEN'),
         'phone_id' => env('WABA_PHONE_ID'),

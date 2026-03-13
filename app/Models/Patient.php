@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Conversation extends Model
+class Patient extends Model
 {
     protected $fillable = [
         'organization_id',
-        'patient_id',
+        'wa_id',
+        'name',
         'phone_number',
-        'conversation_status',
-        'handoff_to_human',
     ];
 
     public function organization(): BelongsTo
@@ -21,13 +20,13 @@ class Conversation extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function patient(): BelongsTo
+    public function conversations(): HasMany
     {
-        return $this->belongsTo(Patient::class);
+        return $this->hasMany(Conversation::class);
     }
 
-    public function messages(): HasMany
+    public function appointments(): HasMany
     {
-        return $this->hasMany(ConversationMessage::class);
+        return $this->hasMany(Appointment::class);
     }
 }

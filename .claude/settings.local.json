@@ -5,7 +5,13 @@
       "Bash(npx skillsadd:*)",
       "Bash(gh api:*)",
       "Bash(npx -y skills add https://github.com/obra/superpowers --skill test-driven-development --agent claude-code -y)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(php artisan:*)"
     ]
   }
 }
