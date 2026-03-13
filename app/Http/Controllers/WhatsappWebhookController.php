@@ -79,7 +79,7 @@ class WhatsappWebhookController extends Controller
                 'content' => $text,
             ]);
 
-            $responseAI = $anthropic->reply($from ?? 'unknown', $text, $history, $org->id, $patient->id);
+            $responseAI = $anthropic->reply($from ?? 'unknown', $text, $history, $org->id, $patient->id, $conversation);
             Log::channel('api')->info("ANSWER: {$responseAI}");
 
             $res = $wa->sendText($from ?? 'unknown', $responseAI);

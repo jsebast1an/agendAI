@@ -14,6 +14,11 @@ class Conversation extends Model
         'phone_number',
         'conversation_status',
         'handoff_to_human',
+        'context',
+    ];
+
+    protected $casts = [
+        'context' => 'array',
     ];
 
     public function organization(): BelongsTo

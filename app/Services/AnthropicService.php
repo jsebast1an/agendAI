@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Conversation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -25,19 +26,28 @@ class AnthropicService
         Collection $history,
         ?int $orgId = null,
         ?int $patientId = null,
+        ?Conversation $conversation = null,
     ): string {
+        $flowContext = [
+            'from' => $from,
+            'org_id' => $orgId,
+            'patient_id' => $patientId,
+            'conversation_id' => $conversation?->id,
+        ];
+
         try {
             $messages = $this->buildMessages($history, $userText);
             $context = ['org_id' => $orgId, 'patient_id' => $patientId];
+            $conversationContext = $conversation?->context ?? [];
 
             for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
-                $response = $this->callApi($messages, $context);
+                $response = $this->callApi($messages, $context, $conversationContext);
 
                 if ($response->failed()) {
                     Log::channel('api')->error('Anthropic API error', [
+                        ...$flowContext,
                         'status' => $response->status(),
                         'body' => $response->body(),
-                        'from' => $from,
                     ]);
                     return $this->fallbackMessage();
                 }
@@ -46,32 +56,35 @@ class AnthropicService
                 $stopReason = $data['stop_reason'] ?? 'end_turn';
 
                 if ($stopReason !== 'tool_use') {
+                    $this->saveContext($conversation, $conversationContext);
                     return $this->extractText($data);
                 }
 
                 // Handle tool calls
                 $messages[] = ['role' => 'assistant', 'content' => $data['content']];
 
-                $toolResults = $this->executeTools($data['content'], $context);
+                $toolResults = $this->executeTools($data['content'], $context, $conversationContext, $flowContext);
                 $messages[] = ['role' => 'user', 'content' => $toolResults];
             }
 
+            Log::channel('api')->warning('Max tool rounds reached', $flowContext);
+            $this->saveContext($conversation, $conversationContext);
             return $this->extractText($response->json());
         } catch (\Throwable $e) {
             Log::channel('api')->error('Anthropic exception', [
-                'message' => $e->getMessage(),
-                'from' => $from,
+                ...$flowContext,
+                'error' => $e->getMessage(),
             ]);
             return $this->fallbackMessage();
         }
     }
 
-    private function callApi(array $messages, array $context): \Illuminate\Http\Client\Response
+    private function callApi(array $messages, array $context, array $conversationContext): \Illuminate\Http\Client\Response
     {
         $payload = [
             'model' => $this->model,
             'max_tokens' => 1024,
-            'system' => $this->systemPrompt(),
+            'system' => $this->systemPrompt($conversationContext),
             'messages' => $messages,
         ];
 
@@ -86,7 +99,7 @@ class AnthropicService
         ])->post($this->apiUrl, $payload);
     }
 
-    private function executeTools(array $content, array $context): array
+    private function executeTools(array $content, array $context, array &$conversationContext, array $flowContext = []): array
     {
         $results = [];
 
@@ -99,16 +112,27 @@ class AnthropicService
             $input = $block['input'] ?? [];
             $toolId = $block['id'];
 
-            Log::channel('api')->info('Tool call', ['name' => $name, 'input' => $input]);
+            Log::channel('api')->info('Tool call', [
+                ...$flowContext,
+                'tool' => $name,
+                'input' => $input,
+            ]);
             $startTime = microtime(true);
 
             $result = $this->dispatchTool($name, $input, $context);
 
-            Log::channel('api')->info('Tool result', [
-                'name' => $name,
-                'duration_ms' => round((microtime(true) - $startTime) * 1000),
-                'result_count' => is_array($result) ? count($result) : 1,
+            $durationMs = round((microtime(true) - $startTime) * 1000);
+            $isError = is_array($result) && isset($result['error']);
+
+            Log::channel('api')->log($isError ? 'error' : 'info', 'Tool result', [
+                ...$flowContext,
+                'tool' => $name,
+                'duration_ms' => $durationMs,
+                'result' => $result,
+                'success' => !$isError,
             ]);
+
+            $this->updateContext($conversationContext, $name, $input, $result);
 
             $results[] = [
                 'type' => 'tool_result',
@@ -118,6 +142,37 @@ class AnthropicService
         }
 
         return $results;
+    }
+
+    private function updateContext(array &$context, string $toolName, array $input, mixed $result): void
+    {
+        match ($toolName) {
+            'get_availability' => $this->updateAvailabilityContext($context, $input, $result),
+            'get_professionals' => $this->updateProfessionalsContext($context, $input),
+            default => null,
+        };
+    }
+
+    private function updateAvailabilityContext(array &$context, array $input, mixed $result): void
+    {
+        $context['selected_service_id'] = $input['service_id'] ?? $context['selected_service_id'] ?? null;
+        $context['selected_professional_id'] = $input['professional_id'] ?? $context['selected_professional_id'] ?? null;
+        $context['preferred_date'] = $input['date_local'] ?? $context['preferred_date'] ?? null;
+        $context['last_availability_result'] = $result;
+    }
+
+    private function updateProfessionalsContext(array &$context, array $input): void
+    {
+        if (isset($input['service_id'])) {
+            $context['selected_service_id'] = $input['service_id'];
+        }
+    }
+
+    private function saveContext(?Conversation $conversation, array $context): void
+    {
+        if ($conversation && !empty($context)) {
+            $conversation->update(['context' => $context]);
+        }
     }
 
     private function dispatchTool(string $name, array $input, array $context): mixed
@@ -232,9 +287,9 @@ class AnthropicService
         ];
     }
 
-    private function systemPrompt(): string
+    private function systemPrompt(array $conversationContext = []): string
     {
-        return <<<'PROMPT'
+        $base = <<<'PROMPT'
         Eres la recepcionista digital de un consultorio médico.
         No eres un chatbot, eres parte del equipo del consultorio.
 
@@ -267,6 +322,37 @@ class AnthropicService
 
         Habla siempre como alguien que trabaja en el consultorio.
         PROMPT;
+
+        $contextBlock = $this->buildContextBlock($conversationContext);
+        if ($contextBlock) {
+            $base .= "\n\n" . $contextBlock;
+        }
+
+        return $base;
+    }
+
+    private function buildContextBlock(array $context): string
+    {
+        if (empty($context)) {
+            return '';
+        }
+
+        $lines = ["CONTEXTO DE ESTA CONVERSACION"];
+
+        if (isset($context['selected_service_id'])) {
+            $lines[] = "- Servicio seleccionado (ID): {$context['selected_service_id']}";
+        }
+        if (isset($context['selected_professional_id'])) {
+            $lines[] = "- Profesional seleccionado (ID): {$context['selected_professional_id']}";
+        }
+        if (isset($context['preferred_date'])) {
+            $lines[] = "- Fecha preferida: {$context['preferred_date']}";
+        }
+        if (isset($context['last_availability_result'])) {
+            $lines[] = "- Ultimo resultado de disponibilidad: " . json_encode($context['last_availability_result']);
+        }
+
+        return count($lines) > 1 ? implode("\n", $lines) : '';
     }
 
     private function fallbackMessage(): string

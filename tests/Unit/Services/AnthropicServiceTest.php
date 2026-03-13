@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use App\Models\Conversation;
 use App\Services\AgendaToolsService;
 use App\Services\AnthropicService;
 use Illuminate\Support\Facades\Http;
@@ -181,5 +182,182 @@ class AnthropicServiceTest extends TestCase
             }
             return false;
         });
+    }
+
+    // --- Context tests ---
+
+    public function test_reply_injects_context_into_system_prompt(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'stop_reason' => 'end_turn',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Respuesta'],
+                ],
+            ], 200),
+        ]);
+
+        $contextData = [
+            'selected_service_id' => 5,
+            'selected_professional_id' => 3,
+            'preferred_date' => '2026-03-15',
+        ];
+
+        $conversation = $this->getMockBuilder(Conversation::class)
+            ->onlyMethods(['update'])
+            ->getMock();
+        $conversation->context = $contextData;
+        $conversation->expects($this->once())->method('update');
+
+        $service = new AnthropicService(new AgendaToolsService());
+        $service->reply('593991234567', 'Hola', collect(), 1, 1, $conversation);
+
+        Http::assertSent(function ($request) {
+            $system = $request['system'] ?? '';
+            return str_contains($system, 'CONTEXTO DE ESTA CONVERSACION')
+                && str_contains($system, 'Servicio seleccionado (ID): 5')
+                && str_contains($system, 'Profesional seleccionado (ID): 3')
+                && str_contains($system, 'Fecha preferida: 2026-03-15');
+        });
+    }
+
+    public function test_reply_does_not_inject_context_when_empty(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'stop_reason' => 'end_turn',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Respuesta'],
+                ],
+            ], 200),
+        ]);
+
+        $service = new AnthropicService(new AgendaToolsService());
+        $service->reply('593991234567', 'Hola', collect());
+
+        Http::assertSent(function ($request) {
+            $system = $request['system'] ?? '';
+            return !str_contains($system, 'CONTEXTO DE ESTA CONVERSACION');
+        });
+    }
+
+    public function test_context_updated_after_get_availability_tool_call(): void
+    {
+        $availabilitySlots = [
+            ['start' => '09:00', 'end' => '09:30'],
+            ['start' => '10:00', 'end' => '10:30'],
+        ];
+
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [
+                        [
+                            'type' => 'tool_use',
+                            'id' => 'toolu_avail',
+                            'name' => 'get_availability',
+                            'input' => [
+                                'professional_id' => 3,
+                                'service_id' => 5,
+                                'date_local' => '2026-03-15',
+                            ],
+                        ],
+                    ],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'end_turn',
+                    'content' => [
+                        ['type' => 'text', 'text' => 'Hay dos horarios disponibles.'],
+                    ],
+                ], 200),
+        ]);
+
+        $mockTools = $this->createMock(AgendaToolsService::class);
+        $mockTools->method('getAvailability')->willReturn($availabilitySlots);
+
+        $savedContext = null;
+        $conversation = $this->getMockBuilder(Conversation::class)
+            ->onlyMethods(['update'])
+            ->getMock();
+        $conversation->context = [];
+        $conversation->expects($this->once())
+            ->method('update')
+            ->with($this->callback(function ($data) use (&$savedContext) {
+                $savedContext = $data['context'];
+                return true;
+            }));
+
+        $service = new AnthropicService($mockTools);
+        $service->reply('593991234567', 'Disponibilidad?', collect(), 1, 1, $conversation);
+
+        $this->assertEquals(5, $savedContext['selected_service_id']);
+        $this->assertEquals(3, $savedContext['selected_professional_id']);
+        $this->assertEquals('2026-03-15', $savedContext['preferred_date']);
+        $this->assertEquals($availabilitySlots, $savedContext['last_availability_result']);
+    }
+
+    public function test_context_updated_after_get_professionals_with_service_id(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [
+                        [
+                            'type' => 'tool_use',
+                            'id' => 'toolu_prof',
+                            'name' => 'get_professionals',
+                            'input' => ['service_id' => 7],
+                        ],
+                    ],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'end_turn',
+                    'content' => [
+                        ['type' => 'text', 'text' => 'Tenemos al Dr. Lopez.'],
+                    ],
+                ], 200),
+        ]);
+
+        $mockTools = $this->createMock(AgendaToolsService::class);
+        $mockTools->method('getProfessionals')->willReturn([
+            ['id' => 3, 'name' => 'Dr. Lopez'],
+        ]);
+
+        $savedContext = null;
+        $conversation = $this->getMockBuilder(Conversation::class)
+            ->onlyMethods(['update'])
+            ->getMock();
+        $conversation->context = [];
+        $conversation->expects($this->once())
+            ->method('update')
+            ->with($this->callback(function ($data) use (&$savedContext) {
+                $savedContext = $data['context'];
+                return true;
+            }));
+
+        $service = new AnthropicService($mockTools);
+        $service->reply('593991234567', 'Que doctores hay?', collect(), 1, 1, $conversation);
+
+        $this->assertEquals(7, $savedContext['selected_service_id']);
+    }
+
+    public function test_context_not_saved_when_no_conversation(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::response([
+                'stop_reason' => 'end_turn',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Respuesta'],
+                ],
+            ], 200),
+        ]);
+
+        $service = new AnthropicService(new AgendaToolsService());
+        // Should not throw - no conversation means no save
+        $result = $service->reply('593991234567', 'Hola', collect());
+
+        $this->assertEquals('Respuesta', $result);
     }
 }
