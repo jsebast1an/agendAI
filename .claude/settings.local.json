@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:skills.sh)",
+      "Bash(npx skillsadd:*)",
+      "Bash(gh api:*)",
+      "Bash(npx -y skills add https://github.com/obra/superpowers --skill test-driven-development --agent claude-code -y)",
+      "Bash(git add:*)"
+    ]
+  }
+}
