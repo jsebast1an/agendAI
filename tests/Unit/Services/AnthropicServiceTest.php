@@ -360,4 +360,58 @@ class AnthropicServiceTest extends TestCase
 
         $this->assertEquals('Respuesta', $result);
     }
+
+    public function test_reply_sends_confirm_and_cancel_tool_definitions(): void
+    {
+        $captured = null;
+
+        Http::fake(function ($request) use (&$captured) {
+            $captured = $request->data();
+            return Http::response([
+                'stop_reason' => 'end_turn',
+                'content' => [['type' => 'text', 'text' => 'Ok']],
+            ], 200);
+        });
+
+        $service = new AnthropicService(new AgendaToolsService());
+        $service->reply('593991234567', 'Quiero cancelar mi cita', collect(), 1, 1);
+
+        $toolNames = collect($captured['tools'])->pluck('name')->all();
+        $this->assertContains('confirm_appointment', $toolNames);
+        $this->assertContains('cancel_appointment', $toolNames);
+    }
+
+    public function test_reply_handles_confirm_appointment_tool_call(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [[
+                        'type' => 'tool_use',
+                        'id' => 'toolu_confirm1',
+                        'name' => 'confirm_appointment',
+                        'input' => [
+                            'professional_id' => 1,
+                            'service_id' => 1,
+                            'start_local' => '2026-04-10 10:00',
+                        ],
+                    ]],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'end_turn',
+                    'content' => [['type' => 'text', 'text' => 'Cita confirmada.']],
+                ], 200),
+        ]);
+
+        $mockTools = $this->createMock(AgendaToolsService::class);
+        $mockTools->expects($this->once())
+            ->method('confirmAppointment')
+            ->willReturn(['appointment_id' => 42, 'start_local' => '2026-04-10 10:00', 'end_local' => '2026-04-10 10:30', 'professional' => 'Dr. Test', 'service' => 'Consulta']);
+
+        $service = new AnthropicService($mockTools);
+        $result = $service->reply('593991234567', 'Confirmar cita', collect(), 1, 1);
+
+        $this->assertEquals('Cita confirmada.', $result);
+    }
 }

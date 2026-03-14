@@ -220,4 +220,46 @@ class AgendaToolsServiceTest extends TestCase
         $this->assertEquals('Dr. López', $result[0]['professional']);
         $this->assertEquals('Consulta General', $result[0]['service']);
     }
+
+    // --- confirm_appointment ---
+
+    public function test_confirm_appointment_delegates_to_appointment_service(): void
+    {
+        $tools = new AgendaToolsService();
+        $result = $tools->confirmAppointment(
+            organizationId: $this->org->id,
+            patientId: $this->patient->id,
+            professionalId: $this->professional->id,
+            serviceId: $this->service->id,
+            startLocal: '2026-04-10 09:00',
+        );
+
+        $this->assertArrayHasKey('appointment_id', $result);
+        $this->assertDatabaseCount('appointments', 1);
+    }
+
+    // --- cancel_appointment ---
+
+    public function test_cancel_appointment_delegates_to_appointment_service(): void
+    {
+        $appointment = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addDays(5),
+            'end_at' => now()->addDays(5)->addMinutes(30),
+            'status' => 'confirmed',
+        ]);
+
+        $tools = new AgendaToolsService();
+        $result = $tools->cancelAppointment(
+            appointmentId: $appointment->id,
+            patientId: $this->patient->id,
+            reason: 'No puedo ir',
+        );
+
+        $this->assertArrayNotHasKey('error', $result);
+        $this->assertEquals('cancelled', $appointment->fresh()->status);
+    }
 }

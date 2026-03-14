@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class AgendaToolsService
 {
+    public function __construct(
+        private readonly AppointmentService $appointmentService = new AppointmentService(),
+    ) {}
+
     public function getServices(int $orgId): array
     {
         try {
@@ -128,5 +132,26 @@ class AgendaToolsService
             ]);
             return [];
         }
+    }
+
+    public function confirmAppointment(
+        int $organizationId,
+        int $patientId,
+        int $professionalId,
+        int $serviceId,
+        string $startLocal,
+    ): array {
+        return $this->appointmentService->confirm(
+            organizationId: $organizationId,
+            patientId: $patientId,
+            professionalId: $professionalId,
+            serviceId: $serviceId,
+            startLocal: $startLocal,
+        );
+    }
+
+    public function cancelAppointment(int $appointmentId, int $patientId, string $reason): array
+    {
+        return $this->appointmentService->cancel($appointmentId, $patientId, $reason);
     }
 }

@@ -218,6 +218,18 @@ class AnthropicService
                     $input['date_local'],
                 ),
                 'list_upcoming_appointments' => $this->tools->listUpcomingAppointments($context['patient_id']),
+                'confirm_appointment' => $this->tools->confirmAppointment(
+                    organizationId: $context['org_id'],
+                    patientId: $context['patient_id'],
+                    professionalId: $input['professional_id'],
+                    serviceId: $input['service_id'],
+                    startLocal: $input['start_local'],
+                ),
+                'cancel_appointment' => $this->tools->cancelAppointment(
+                    appointmentId: $input['appointment_id'],
+                    patientId: $context['patient_id'],
+                    reason: $input['reason'],
+                ),
                 default => ['error' => "Unknown tool: {$name}"],
             };
         } catch (\Throwable $e) {
@@ -310,6 +322,31 @@ class AnthropicService
                     'type' => 'object',
                     'properties' => (object) [],
                     'required' => [],
+                ],
+            ],
+            [
+                'name' => 'confirm_appointment',
+                'description' => 'Book and confirm an appointment for the patient. Use only after patient has explicitly confirmed the details.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'professional_id' => ['type' => 'integer', 'description' => 'ID of the professional'],
+                        'service_id' => ['type' => 'integer', 'description' => 'ID of the service'],
+                        'start_local' => ['type' => 'string', 'description' => 'Start datetime in local time, format: Y-m-d H:i'],
+                    ],
+                    'required' => ['professional_id', 'service_id', 'start_local'],
+                ],
+            ],
+            [
+                'name' => 'cancel_appointment',
+                'description' => 'Cancel an existing appointment for the patient. Use only after patient has confirmed they want to cancel.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'appointment_id' => ['type' => 'integer', 'description' => 'ID of the appointment to cancel'],
+                        'reason' => ['type' => 'string', 'description' => 'Reason given by the patient for cancellation'],
+                    ],
+                    'required' => ['appointment_id', 'reason'],
                 ],
             ],
         ];

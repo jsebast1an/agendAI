@@ -11,6 +11,7 @@ class Organization extends Model
         'name',
         'wa_phone_number',
         'timezone',
+        'cancellation_hours_min',
     ];
 
     public function patients(): HasMany
