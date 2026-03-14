@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->unsignedSmallInteger('cancellation_hours_min')->default(24)->after('timezone');
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->boolean('deposit_paid')->default(false)->after('cancel_reason');
         });
     }
 
     public function down(): void
     {
-        Schema::table('organizations', function (Blueprint $table) {
-            $table->dropColumn('cancellation_hours_min');
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->dropColumn('deposit_paid');
         });
     }
 };

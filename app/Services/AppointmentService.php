@@ -16,6 +16,7 @@ class AppointmentService
         int $professionalId,
         int $serviceId,
         string $startLocal,
+        bool $depositPaid = false,
     ): array {
         try {
             $org = Organization::findOrFail($organizationId);
@@ -47,6 +48,7 @@ class AppointmentService
                 'start_at' => $startUtc,
                 'end_at' => $endUtc,
                 'status' => 'confirmed',
+                'deposit_paid' => $depositPaid,
             ]);
 
             $appointment->load(['professional', 'service']);
@@ -79,9 +81,9 @@ class AppointmentService
             }
 
             $org = Organization::findOrFail($appointment->organization_id);
-            $minHours = $org->cancellation_hours_min ?? 0;
+            $minHours = $org->cancellation_hours_min ?? 24;
 
-            if ($minHours > 0) {
+            if ($minHours > 0 && !$appointment->deposit_paid) {
                 $hoursUntil = now()->diffInHours($appointment->start_at, absolute: false);
                 if ($hoursUntil < $minHours) {
                     return [

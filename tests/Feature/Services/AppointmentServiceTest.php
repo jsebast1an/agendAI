@@ -217,4 +217,64 @@ class AppointmentServiceTest extends TestCase
         $this->assertArrayHasKey('error', $result);
         $this->assertEquals('confirmed', $appointment->fresh()->status);
     }
+
+    public function test_cancel_allowed_anytime_when_deposit_paid(): void
+    {
+        // Org requires 24h notice, but patient paid deposit so can cancel anytime
+        $this->org->update(['cancellation_hours_min' => 24]);
+
+        $appointment = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addHours(6)->setTimezone('UTC'),
+            'end_at' => now()->addHours(6)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+            'deposit_paid' => true,
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->cancel($appointment->id, $this->patient->id, 'Emergencia');
+
+        $this->assertArrayNotHasKey('error', $result);
+        $this->assertEquals('cancelled', $appointment->fresh()->status);
+    }
+
+    public function test_confirm_sets_deposit_paid_flag(): void
+    {
+        $service = new AppointmentService();
+
+        $result = $service->confirm(
+            organizationId: $this->org->id,
+            patientId: $this->patient->id,
+            professionalId: $this->professional->id,
+            serviceId: $this->service->id,
+            startLocal: '2026-04-01 10:00',
+            depositPaid: true,
+        );
+
+        $this->assertArrayNotHasKey('error', $result);
+        $this->assertTrue((bool) Appointment::first()->deposit_paid);
+    }
+
+    public function test_default_cancellation_policy_is_24_hours(): void
+    {
+        // Without explicit policy set, orgs default to 24h
+        $appointment = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addHours(12)->setTimezone('UTC'),
+            'end_at' => now()->addHours(12)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->cancel($appointment->id, $this->patient->id, 'Cancelar');
+
+        $this->assertArrayHasKey('error', $result);
+        $this->assertArrayHasKey('policy_violation', $result);
+    }
 }

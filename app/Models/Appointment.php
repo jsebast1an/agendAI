@@ -16,11 +16,13 @@ class Appointment extends Model
         'end_at',
         'status',
         'cancel_reason',
+        'deposit_paid',
     ];
 
     protected $casts = [
         'start_at' => 'datetime',
         'end_at' => 'datetime',
+        'deposit_paid' => 'boolean',
     ];
 
     public function organization(): BelongsTo
