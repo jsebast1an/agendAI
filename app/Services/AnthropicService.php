@@ -441,6 +441,10 @@ class AnthropicService
         - Si no entiendes, pregunta una sola cosa concreta.
         PROMPT;
 
+        $now = \Carbon\Carbon::now('America/Guayaquil');
+        $base .= "\n\nFECHA Y HORA ACTUAL: " . $now->translatedFormat('l d \d\e F \d\e Y, H:i') . " (hora Ecuador)";
+        $base .= "\nCuando el paciente diga fechas relativas (\"mañana\", \"el lunes\", \"la próxima semana\"), resuélvelas tú y confirma la fecha exacta al paciente antes de consultar disponibilidad.";
+
         $contextBlock = $this->buildContextBlock($conversationContext);
         if ($contextBlock) {
             $base .= "\n\n" . $contextBlock;
