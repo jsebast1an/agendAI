@@ -65,24 +65,18 @@ class WhatsappWebhookController extends Controller
                 return response()->json(['ok' => true]);
             }
 
-            // Add message to the pending batch for this conversation
+            // Add message to the pending batch for this conversation window
             $pendingKey = "whatsapp.pending.{$conversation->id}";
             $pending = Cache::get($pendingKey, []);
             $pending[] = $text;
             Cache::put($pendingKey, $pending, now()->addSeconds(60));
 
-            // Increment nonce — the job will only execute if nonce matches
-            $nonceKey = "whatsapp.nonce.{$conversation->id}";
-            $nonce = Cache::increment($nonceKey);
-            Cache::put($nonceKey, $nonce, now()->addSeconds(60));
-
-            // Dispatch job with debounce delay — replaces previous job for this window
-            ProcessConversationJob::dispatch($conversation->id, $from, $nonce)
+            // Each message dispatches a delayed job — only the last one will find messages
+            ProcessConversationJob::dispatch($conversation->id, $from)
                 ->delay(now()->addSeconds(self::DEBOUNCE_SECONDS));
 
             Log::channel('api')->info('Message queued', [
                 'conversation_id' => $conversation->id,
-                'nonce' => $nonce,
                 'pending_count' => count($pending),
             ]);
 
