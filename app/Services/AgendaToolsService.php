@@ -154,4 +154,20 @@ class AgendaToolsService
     {
         return $this->appointmentService->cancel($appointmentId, $patientId, $reason);
     }
+
+    public function rescheduleAppointment(
+        int $appointmentId,
+        int $patientId,
+        int $newProfessionalId,
+        int $newServiceId,
+        string $newStartLocal,
+    ): array {
+        return $this->appointmentService->reschedule(
+            appointmentId: $appointmentId,
+            patientId: $patientId,
+            newProfessionalId: $newProfessionalId,
+            newServiceId: $newServiceId,
+            newStartLocal: $newStartLocal,
+        );
+    }
 }

@@ -14,6 +14,7 @@ class AnthropicService
     private string $model;
     private string $apiUrl = 'https://api.anthropic.com/v1/messages';
     private const MAX_TOOL_ROUNDS = 5;
+    private const MAX_CONSECUTIVE_TOOL_ERRORS = 2;
 
     public function __construct(private AgendaToolsService $tools)
     {
@@ -40,6 +41,7 @@ class AnthropicService
             $messages = $this->buildMessages($history, $userText);
             $context = ['org_id' => $orgId, 'patient_id' => $patientId];
             $conversationContext = $conversation?->context ?? [];
+            $consecutiveToolErrors = 0;
 
             for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
                 $response = $this->callApi($messages, $context, $conversationContext);
@@ -66,6 +68,21 @@ class AnthropicService
 
                 $toolResults = $this->executeTools($data['content'], $context, $conversationContext, $flowContext);
                 $messages[] = ['role' => 'user', 'content' => $toolResults];
+
+                $allFailed = collect($toolResults)->every(
+                    fn($r) => str_contains($r['content'] ?? '', '"error"')
+                );
+
+                if ($allFailed) {
+                    $consecutiveToolErrors++;
+                    if ($consecutiveToolErrors >= self::MAX_CONSECUTIVE_TOOL_ERRORS) {
+                        Log::channel('api')->error('Handoff triggered after repeated tool failures', $flowContext);
+                        $this->triggerHandoff($conversation);
+                        return $this->handoffMessage();
+                    }
+                } else {
+                    $consecutiveToolErrors = 0;
+                }
             }
 
             Log::channel('api')->warning('Max tool rounds reached', $flowContext);
@@ -178,6 +195,20 @@ class AnthropicService
         }
     }
 
+    private function triggerHandoff(?Conversation $conversation): void
+    {
+        if ($conversation) {
+            $conversation->update(['handoff_to_human' => true]);
+        }
+    }
+
+    private function handoffMessage(): string
+    {
+        return 'Lo siento, estoy teniendo dificultades para completar tu solicitud en este momento. '
+            . 'Por favor, comunícate directamente con el consultorio para que puedan ayudarte. '
+            . 'Disculpa los inconvenientes.';
+    }
+
     private function persistToolLog(array $flowContext, string $toolName, array $input, mixed $result, float $durationMs, bool $isError): void
     {
         if (!$flowContext['org_id']) {
@@ -229,6 +260,13 @@ class AnthropicService
                     appointmentId: $input['appointment_id'],
                     patientId: $context['patient_id'],
                     reason: $input['reason'],
+                ),
+                'reschedule_appointment' => $this->tools->rescheduleAppointment(
+                    appointmentId: $input['appointment_id'],
+                    patientId: $context['patient_id'],
+                    newProfessionalId: $input['new_professional_id'],
+                    newServiceId: $input['new_service_id'],
+                    newStartLocal: $input['new_start_local'],
                 ),
                 default => ['error' => "Unknown tool: {$name}"],
             };
@@ -347,6 +385,20 @@ class AnthropicService
                         'reason' => ['type' => 'string', 'description' => 'Reason given by the patient for cancellation'],
                     ],
                     'required' => ['appointment_id', 'reason'],
+                ],
+            ],
+            [
+                'name' => 'reschedule_appointment',
+                'description' => 'Reschedule an existing appointment to a new date/time. Cancels old appointment and creates new one. Use only after patient has confirmed the new slot.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'appointment_id' => ['type' => 'integer', 'description' => 'ID of the appointment to reschedule'],
+                        'new_professional_id' => ['type' => 'integer', 'description' => 'ID of the professional for the new appointment'],
+                        'new_service_id' => ['type' => 'integer', 'description' => 'ID of the service for the new appointment'],
+                        'new_start_local' => ['type' => 'string', 'description' => 'New start datetime in local time, format: Y-m-d H:i'],
+                    ],
+                    'required' => ['appointment_id', 'new_professional_id', 'new_service_id', 'new_start_local'],
                 ],
             ],
         ];

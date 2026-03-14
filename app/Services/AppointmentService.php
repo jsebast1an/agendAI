@@ -67,6 +67,66 @@ class AppointmentService
         }
     }
 
+    public function reschedule(
+        int $appointmentId,
+        int $patientId,
+        int $newProfessionalId,
+        int $newServiceId,
+        string $newStartLocal,
+    ): array {
+        try {
+            $old = Appointment::find($appointmentId);
+
+            if (!$old || $old->status !== 'confirmed') {
+                return ['error' => 'Cita no encontrada o ya cancelada.'];
+            }
+
+            if ($old->patient_id !== $patientId) {
+                return ['error' => 'No tienes permiso para reprogramar esta cita.'];
+            }
+
+            $depositPaid = (bool) $old->deposit_paid;
+            $organizationId = $old->organization_id;
+
+            // Validate cancellation policy before touching anything
+            $org = Organization::findOrFail($organizationId);
+            $minHours = $org->cancellation_hours_min ?? 24;
+
+            if ($minHours > 0 && !$depositPaid) {
+                $hoursUntil = now()->diffInHours($old->start_at, absolute: false);
+                if ($hoursUntil < $minHours) {
+                    return [
+                        'error' => "Solo se puede reprogramar con al menos {$minHours} horas de anticipación.",
+                        'policy_violation' => true,
+                    ];
+                }
+            }
+
+            // Cancel old
+            $old->update(['status' => 'cancelled', 'cancel_reason' => 'Reprogramación']);
+
+            // Confirm new — if new slot fails, restore old
+            $newResult = $this->confirm(
+                organizationId: $organizationId,
+                patientId: $patientId,
+                professionalId: $newProfessionalId,
+                serviceId: $newServiceId,
+                startLocal: $newStartLocal,
+                depositPaid: $depositPaid,
+            );
+
+            if (isset($newResult['error'])) {
+                $old->update(['status' => 'confirmed', 'cancel_reason' => null]);
+                return $newResult;
+            }
+
+            return $newResult;
+        } catch (\Throwable $e) {
+            Log::channel('api')->error('reschedule failed', ['error' => $e->getMessage()]);
+            return ['error' => 'No se pudo reprogramar la cita. Intenta nuevamente.'];
+        }
+    }
+
     public function cancel(int $appointmentId, int $patientId, string $reason): array
     {
         try {

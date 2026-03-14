@@ -277,4 +277,127 @@ class AppointmentServiceTest extends TestCase
         $this->assertArrayHasKey('error', $result);
         $this->assertArrayHasKey('policy_violation', $result);
     }
+
+    // --- reschedule ---
+
+    public function test_reschedule_cancels_old_and_creates_new_appointment(): void
+    {
+        $old = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addDays(5)->setTimezone('UTC'),
+            'end_at' => now()->addDays(5)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->reschedule(
+            appointmentId: $old->id,
+            patientId: $this->patient->id,
+            newProfessionalId: $this->professional->id,
+            newServiceId: $this->service->id,
+            newStartLocal: '2026-04-20 11:00',
+        );
+
+        $this->assertArrayHasKey('appointment_id', $result);
+        $this->assertNotEquals($old->id, $result['appointment_id']);
+        $this->assertEquals('cancelled', $old->fresh()->status);
+        $this->assertDatabaseCount('appointments', 2);
+    }
+
+    public function test_reschedule_transfers_deposit_paid_to_new_appointment(): void
+    {
+        $old = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addHours(6)->setTimezone('UTC'),
+            'end_at' => now()->addHours(6)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+            'deposit_paid' => true,
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->reschedule(
+            appointmentId: $old->id,
+            patientId: $this->patient->id,
+            newProfessionalId: $this->professional->id,
+            newServiceId: $this->service->id,
+            newStartLocal: '2026-04-20 09:00',
+        );
+
+        $this->assertArrayNotHasKey('error', $result);
+        $newAppointment = Appointment::find($result['appointment_id']);
+        $this->assertTrue($newAppointment->deposit_paid);
+    }
+
+    public function test_reschedule_blocked_by_cancellation_policy_when_no_deposit(): void
+    {
+        $this->org->update(['cancellation_hours_min' => 24]);
+
+        $old = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addHours(6)->setTimezone('UTC'),
+            'end_at' => now()->addHours(6)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+            'deposit_paid' => false,
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->reschedule(
+            appointmentId: $old->id,
+            patientId: $this->patient->id,
+            newProfessionalId: $this->professional->id,
+            newServiceId: $this->service->id,
+            newStartLocal: '2026-04-20 09:00',
+        );
+
+        $this->assertArrayHasKey('error', $result);
+        $this->assertArrayHasKey('policy_violation', $result);
+        $this->assertEquals('confirmed', $old->fresh()->status);
+        $this->assertDatabaseCount('appointments', 1);
+    }
+
+    public function test_reschedule_fails_when_new_slot_already_taken(): void
+    {
+        $old = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addDays(5)->setTimezone('UTC'),
+            'end_at' => now()->addDays(5)->addMinutes(30)->setTimezone('UTC'),
+            'status' => 'confirmed',
+        ]);
+
+        // Another appointment blocks the target slot
+        Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => '2026-04-20 15:00:00', // 10:00 ECT = 15:00 UTC
+            'end_at' => '2026-04-20 15:30:00',
+            'status' => 'confirmed',
+        ]);
+
+        $service = new AppointmentService();
+        $result = $service->reschedule(
+            appointmentId: $old->id,
+            patientId: $this->patient->id,
+            newProfessionalId: $this->professional->id,
+            newServiceId: $this->service->id,
+            newStartLocal: '2026-04-20 10:00',
+        );
+
+        $this->assertArrayHasKey('error', $result);
+        // Old appointment should be restored to confirmed
+        $this->assertEquals('confirmed', $old->fresh()->status);
+    }
 }

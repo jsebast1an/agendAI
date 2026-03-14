@@ -262,4 +262,29 @@ class AgendaToolsServiceTest extends TestCase
         $this->assertArrayNotHasKey('error', $result);
         $this->assertEquals('cancelled', $appointment->fresh()->status);
     }
+
+    public function test_reschedule_appointment_delegates_to_appointment_service(): void
+    {
+        $old = Appointment::create([
+            'organization_id' => $this->org->id,
+            'patient_id' => $this->patient->id,
+            'professional_id' => $this->professional->id,
+            'service_id' => $this->service->id,
+            'start_at' => now()->addDays(5),
+            'end_at' => now()->addDays(5)->addMinutes(30),
+            'status' => 'confirmed',
+        ]);
+
+        $tools = new AgendaToolsService();
+        $result = $tools->rescheduleAppointment(
+            appointmentId: $old->id,
+            patientId: $this->patient->id,
+            newProfessionalId: $this->professional->id,
+            newServiceId: $this->service->id,
+            newStartLocal: '2026-04-25 10:00',
+        );
+
+        $this->assertArrayHasKey('appointment_id', $result);
+        $this->assertEquals('cancelled', $old->fresh()->status);
+    }
 }

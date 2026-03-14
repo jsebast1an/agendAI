@@ -381,6 +381,60 @@ class AnthropicServiceTest extends TestCase
         $this->assertContains('cancel_appointment', $toolNames);
     }
 
+    public function test_reply_sends_reschedule_tool_definition(): void
+    {
+        $captured = null;
+
+        Http::fake(function ($request) use (&$captured) {
+            $captured = $request->data();
+            return Http::response([
+                'stop_reason' => 'end_turn',
+                'content' => [['type' => 'text', 'text' => 'Ok']],
+            ], 200);
+        });
+
+        $service = new AnthropicService(new AgendaToolsService());
+        $service->reply('593991234567', 'Quiero reprogramar', collect(), 1, 1);
+
+        $toolNames = collect($captured['tools'])->pluck('name')->all();
+        $this->assertContains('reschedule_appointment', $toolNames);
+    }
+
+    public function test_reply_handles_reschedule_appointment_tool_call(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [[
+                        'type' => 'tool_use',
+                        'id' => 'toolu_reschedule1',
+                        'name' => 'reschedule_appointment',
+                        'input' => [
+                            'appointment_id' => 10,
+                            'new_professional_id' => 1,
+                            'new_service_id' => 1,
+                            'new_start_local' => '2026-04-15 09:00',
+                        ],
+                    ]],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'end_turn',
+                    'content' => [['type' => 'text', 'text' => 'Cita reprogramada.']],
+                ], 200),
+        ]);
+
+        $mockTools = $this->createMock(AgendaToolsService::class);
+        $mockTools->expects($this->once())
+            ->method('rescheduleAppointment')
+            ->willReturn(['appointment_id' => 99, 'start_local' => '2026-04-15 09:00', 'end_local' => '2026-04-15 09:30', 'professional' => 'Dr. Test', 'service' => 'Consulta']);
+
+        $service = new AnthropicService($mockTools);
+        $result = $service->reply('593991234567', 'Reprogramar', collect(), 1, 1);
+
+        $this->assertEquals('Cita reprogramada.', $result);
+    }
+
     public function test_reply_handles_confirm_appointment_tool_call(): void
     {
         Http::fake([
@@ -413,5 +467,48 @@ class AnthropicServiceTest extends TestCase
         $result = $service->reply('593991234567', 'Confirmar cita', collect(), 1, 1);
 
         $this->assertEquals('Cita confirmada.', $result);
+    }
+
+    public function test_reply_triggers_handoff_when_tool_fails_repeatedly(): void
+    {
+        Http::fake([
+            'api.anthropic.com/*' => Http::sequence()
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [[
+                        'type' => 'tool_use',
+                        'id' => 'toolu_fail1',
+                        'name' => 'confirm_appointment',
+                        'input' => ['professional_id' => 1, 'service_id' => 1, 'start_local' => '2026-04-10 10:00'],
+                    ]],
+                ], 200)
+                ->push([
+                    'stop_reason' => 'tool_use',
+                    'content' => [[
+                        'type' => 'tool_use',
+                        'id' => 'toolu_fail2',
+                        'name' => 'confirm_appointment',
+                        'input' => ['professional_id' => 1, 'service_id' => 1, 'start_local' => '2026-04-10 10:00'],
+                    ]],
+                ], 200),
+        ]);
+
+        $mockTools = $this->createMock(AgendaToolsService::class);
+        $mockTools->method('confirmAppointment')
+            ->willThrowException(new \RuntimeException('DB down'));
+
+        $conversation = $this->createMock(Conversation::class);
+        $conversation->method('__get')->willReturnMap([
+            ['context', []],
+            ['handoff_to_human', false],
+        ]);
+        $conversation->expects($this->atLeastOnce())
+            ->method('update')
+            ->with($this->arrayHasKey('handoff_to_human'));
+
+        $service = new AnthropicService($mockTools);
+        $result = $service->reply('593991234567', 'Confirmar cita', collect(), 1, 1, $conversation);
+
+        $this->assertStringContainsString('consultorio', $result);
     }
 }
