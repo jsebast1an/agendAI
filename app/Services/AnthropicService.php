@@ -64,7 +64,14 @@ class AnthropicService
                 }
 
                 // Handle tool calls
-                $messages[] = ['role' => 'assistant', 'content' => $data['content']];
+                // Cast empty tool inputs from [] to {} so Anthropic accepts them on re-send
+                $assistantContent = array_map(function ($block) {
+                    if (($block['type'] ?? '') === 'tool_use' && ($block['input'] ?? null) === []) {
+                        $block['input'] = (object) [];
+                    }
+                    return $block;
+                }, $data['content']);
+                $messages[] = ['role' => 'assistant', 'content' => $assistantContent];
 
                 $toolResults = $this->executeTools($data['content'], $context, $conversationContext, $flowContext);
                 $messages[] = ['role' => 'user', 'content' => $toolResults];
