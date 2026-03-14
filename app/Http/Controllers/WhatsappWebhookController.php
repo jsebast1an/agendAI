@@ -66,6 +66,11 @@ class WhatsappWebhookController extends Controller
                 ]
             );
 
+            if ($conversation->handoff_to_human) {
+                Log::channel('api')->info('Conversation in handoff — skipping AI', ['from' => $from]);
+                return response()->json(['ok' => true]);
+            }
+
             $memoryLimit = (int) config('services.waba.memory_limit', 10);
             $history = $conversation->messages()
                 ->orderBy('created_at', 'desc')
