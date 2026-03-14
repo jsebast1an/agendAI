@@ -8,6 +8,7 @@ use App\Services\TenantResolverService;
 use App\Services\WhatsappService;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WhatsappWebhookController extends Controller
@@ -71,7 +72,17 @@ class WhatsappWebhookController extends Controller
                 return response()->json(['ok' => true]);
             }
 
-            $memoryLimit = (int) config('services.waba.memory_limit', 10);
+            $lock = Cache::lock("whatsapp.conv.{$conversation->id}", 30);
+            if (!$lock->get()) {
+                Log::channel('api')->info('Message dropped — conversation locked', ['from' => $from]);
+                return response()->json(['ok' => true]);
+            }
+
+            try {
+                // Reload conversation inside lock to get latest state
+                $conversation->refresh();
+
+                $memoryLimit = (int) config('services.waba.memory_limit', 10);
             $history = $conversation->messages()
                 ->orderBy('created_at', 'desc')
                 ->take($memoryLimit)
@@ -94,7 +105,10 @@ class WhatsappWebhookController extends Controller
                 'content' => $responseAI,
             ]);
 
-            return response()->json(['ok' => $res]);
+                return response()->json(['ok' => $res]);
+            } finally {
+                $lock->release();
+            }
         } catch (\Throwable $e) {
             Log::channel('api')->error('WA webhook ERROR', [
                 'msg' => $e->getMessage(),
