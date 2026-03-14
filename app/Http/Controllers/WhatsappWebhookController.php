@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AnthropicService;
+use App\Jobs\ProcessConversationJob;
+use App\Models\Conversation;
 use App\Services\PatientResolverService;
 use App\Services\TenantResolverService;
-use App\Services\WhatsappService;
-use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WhatsappWebhookController extends Controller
 {
+    private const DEBOUNCE_SECONDS = 10;
+
     public function verify(Request $r)
     {
         $token = $r->query('hub_verify_token') ?? $r->query('hub.verify_token');
@@ -24,8 +25,6 @@ class WhatsappWebhookController extends Controller
 
     public function handle(
         Request $r,
-        WhatsappService $wa,
-        AnthropicService $anthropic,
         TenantResolverService $tenantResolver,
         PatientResolverService $patientResolver,
     ) {
@@ -35,7 +34,6 @@ class WhatsappWebhookController extends Controller
             $msg = data_get($entry, 'messages.0');
 
             if (!is_array($msg)) {
-                Log::info('WA inbound sin messages (status/delivery u otro). ACK.');
                 return response()->json(['ok' => true]);
             }
 
@@ -43,19 +41,14 @@ class WhatsappWebhookController extends Controller
             $businessNumber = data_get($entry, 'metadata.display_phone_number');
             $text = data_get($msg, 'text.body') ?? '[Contenido no textual]';
 
-            Log::channel('api')->info('WA inbound', [
-                'from' => $from,
-                'business_number' => $businessNumber,
-            ]);
+            Log::channel('api')->info('WA inbound', ['from' => $from, 'business_number' => $businessNumber]);
 
-            // Resolve tenant (organization)
             $org = $tenantResolver->resolve($businessNumber ?? '');
             if (!$org) {
                 Log::channel('api')->warning('Unknown business number', ['number' => $businessNumber]);
                 return response()->json(['ok' => true]);
             }
 
-            // Resolve or auto-register patient
             $patient = $patientResolver->resolve($org, $from ?? 'unknown');
 
             $conversation = Conversation::firstOrCreate(
@@ -68,47 +61,32 @@ class WhatsappWebhookController extends Controller
             );
 
             if ($conversation->handoff_to_human) {
-                Log::channel('api')->info('Conversation in handoff — skipping AI', ['from' => $from]);
+                Log::channel('api')->info('Conversation in handoff — skipping', ['from' => $from]);
                 return response()->json(['ok' => true]);
             }
 
-            $lock = Cache::lock("whatsapp.conv.{$conversation->id}", 30);
-            if (!$lock->get()) {
-                Log::channel('api')->info('Message dropped — conversation locked', ['from' => $from]);
-                return response()->json(['ok' => true]);
-            }
+            // Add message to the pending batch for this conversation
+            $pendingKey = "whatsapp.pending.{$conversation->id}";
+            $pending = Cache::get($pendingKey, []);
+            $pending[] = $text;
+            Cache::put($pendingKey, $pending, now()->addSeconds(60));
 
-            try {
-                // Reload conversation inside lock to get latest state
-                $conversation->refresh();
+            // Increment nonce — the job will only execute if nonce matches
+            $nonceKey = "whatsapp.nonce.{$conversation->id}";
+            $nonce = Cache::increment($nonceKey);
+            Cache::put($nonceKey, $nonce, now()->addSeconds(60));
 
-                $memoryLimit = (int) config('services.waba.memory_limit', 10);
-            $history = $conversation->messages()
-                ->orderBy('created_at', 'desc')
-                ->take($memoryLimit)
-                ->get()
-                ->reverse()
-                ->values();
+            // Dispatch job with debounce delay — replaces previous job for this window
+            ProcessConversationJob::dispatch($conversation->id, $from, $nonce)
+                ->delay(now()->addSeconds(self::DEBOUNCE_SECONDS));
 
-            $conversation->messages()->create([
-                'role' => 'user',
-                'content' => $text,
+            Log::channel('api')->info('Message queued', [
+                'conversation_id' => $conversation->id,
+                'nonce' => $nonce,
+                'pending_count' => count($pending),
             ]);
 
-            $responseAI = $anthropic->reply($from ?? 'unknown', $text, $history, $org->id, $patient->id, $conversation);
-            Log::channel('api')->info("ANSWER: {$responseAI}");
-
-            $res = $wa->sendText($from ?? 'unknown', $responseAI);
-
-            $conversation->messages()->create([
-                'role' => 'assistant',
-                'content' => $responseAI,
-            ]);
-
-                return response()->json(['ok' => $res]);
-            } finally {
-                $lock->release();
-            }
+            return response()->json(['ok' => true]);
         } catch (\Throwable $e) {
             Log::channel('api')->error('WA webhook ERROR', [
                 'msg' => $e->getMessage(),
