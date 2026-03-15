@@ -10,8 +10,10 @@ Multi-tenant — un backend sirve a múltiples consultorios.
 
 - **Backend:** Laravel 12 (PHP 8.2+) + MySQL
 - **Frontend:** Inertia.js (landing page, no relevante para el agente)
-- **LLM:** Migrando de OpenAI (GPT) → Claude API (Anthropic) con tool calling nativo
+- **LLM:** Claude API (Anthropic) con tool calling nativo
 - **Canal:** WhatsApp Business API (Meta Graph API v22.0)
+- **Queue:** Laravel Queue (database driver) para debounce de mensajes
+- **Cache:** Database driver (cross-process, necesario para debounce)
 - **Testing:** PHPUnit, Laravel Pint (linter)
 - **Dev server:** `composer dev` (levanta server + queue + pail + vite)
 
@@ -20,16 +22,30 @@ Multi-tenant — un backend sirve a múltiples consultorios.
 ```
 app/
 ├── Http/Controllers/
-│   └── WhatsappWebhookController.php   # Webhook principal (POST/GET /api/webhook/whatsapp)
+│   └── WhatsappWebhookController.php   # Webhook: recibe mensaje, acumula en cache, despacha job con delay
+├── Jobs/
+│   └── ProcessConversationJob.php      # Debounce: lock + pull mensajes pendientes, llama AnthropicService
 ├── Models/
-│   ├── Conversation.php                # phone_number → conversación activa
-│   └── ConversationMessage.php         # Mensajes (role: user|assistant)
+│   ├── Appointment.php                 # Cita: patient, professional, service, start/end UTC, status, deposit_paid
+│   ├── Conversation.php                # phone_number + org_id → conversación activa, context JSON, handoff
+│   ├── ConversationMessage.php         # Mensajes (role: user|assistant)
+│   ├── Organization.php                # Tenant: nombre, wa_phone_number, cancellation_hours_min
+│   ├── Patient.php                     # Paciente: wa_id, nombre, telefono, org_id
+│   ├── Professional.php               # Profesional: nombre, especialidad, org_id
+│   ├── Schedule.php                    # Horario semanal: professional_id, day_of_week, start/end
+│   ├── Service.php                     # Servicio: nombre, descripcion, org_id
+│   └── ToolCallLog.php                # Log de tool calls para observabilidad
 ├── Services/
-│   ├── OpenAIService.php               # A REEMPLAZAR por AnthropicService en Fase 1
-│   └── WhatsappService.php             # Envía mensajes vía Meta Graph API
-config/services.php                     # Config de openai, waba (tokens, phone_id, etc.)
+│   ├── AgendaToolsService.php          # Ejecuta tools: read-only + transaccionales
+│   ├── AnthropicService.php            # Claude API: system prompt, tool definitions, tool loop, handoff
+│   ├── AppointmentService.php          # Logica transaccional: confirm, cancel, reschedule
+│   ├── OpenAIService.php               # Legacy (sin uso, pendiente de eliminar)
+│   ├── PatientResolverService.php      # Resuelve/crea paciente por wa_id
+│   ├── TenantResolverService.php       # Resuelve org por numero WhatsApp Business
+│   └── WhatsappService.php             # Envia mensajes via Meta Graph API
+config/services.php                     # Config de anthropic, waba (tokens, phone_id, etc.)
 routes/api.php                          # POST|GET /webhook/whatsapp
-database/migrations/                    # conversations + conversation_messages
+database/seeders/DentalClinicSeeder.php # Seed de clinica dental de prueba (4 profesionales, 10 servicios)
 ```
 
 ## Convenciones de código
@@ -48,13 +64,48 @@ database/migrations/                    # conversations + conversation_messages
 ## Base de datos actual
 
 ```
+organizations
+├── id, name, wa_phone_number (unique), cancellation_hours_min (default 24), timestamps
+
+patients
+├── id, organization_id (FK), wa_id (indexed), name, phone_number, timestamps
+└── unique: [organization_id, wa_id]
+
+professionals
+├── id, organization_id (FK), name, specialty, timestamps
+
+services
+├── id, organization_id (FK), name, description, timestamps
+
+professional_service (pivot)
+├── professional_id (FK), service_id (FK), duration_minutes, price
+└── unique: [professional_id, service_id]
+
+schedules
+├── id, professional_id (FK), day_of_week (0-6), start_time, end_time, timestamps
+
+appointments
+├── id, organization_id (FK), patient_id (FK), professional_id (FK), service_id (FK)
+├── starts_at (UTC), ends_at (UTC), status (confirmed|cancelled), deposit_paid (bool)
+├── cancelled_at, cancellation_reason, timestamps
+└── index: [professional_id, starts_at, ends_at]
+
 conversations
-├── id, phone_number (unique, indexed), conversation_status, handoff_to_human, timestamps
+├── id, phone_number, organization_id (FK), patient_id (FK)
+├── conversation_status, handoff_to_human, context (JSON), timestamps
+└── unique: [phone_number, organization_id]
 
 conversation_messages
 ├── id, conversation_id (FK cascade), role (user|assistant), content (text), timestamps
 └── index: [conversation_id, created_at]
+
+tool_call_logs
+├── id, organization_id, conversation_id, patient_id, tool_name
+├── input (JSON), result (JSON), duration_ms, success (bool), error_message, timestamps
 ```
+
+> **Nota:** Todos los datetimes en BD se almacenan en UTC. La conversion a hora local
+> (America/Guayaquil, UTC-5) se hace al presentar al paciente y al recibir input.
 
 ## Principio central
 
@@ -62,24 +113,30 @@ El backend es la única fuente de verdad. Claude interpreta intención y mantien
 contexto conversacional, pero nunca inventa horarios, cupos, tarifas ni políticas.
 Todo dato operativo sale de una tool call al backend.
 
-## Fase actual: Fase 1 (branch `feature/fase1/start`)
+## Fase actual: Fase 2 completada (branch `feature/fase1/start`)
 
-### Objetivo
-Construir el cerebro del agente con datos reales, sin riesgo transaccional.
-Solo tools read-only.
-
-### Tareas de Fase 1
+### Fase 1 — completada
 1. Migrar `OpenAIService` → `AnthropicService` (tool calling nativo de Anthropic)
 2. Resolución de paciente por `wa_id` (auto-registro si no existe)
 3. Resolución de tenant por `org_id` (desde número WhatsApp Business entrante)
 4. Tools read-only: `get_services`, `get_professionals`, `get_availability`, `list_upcoming_appointments`
-5. Memoria estructurada de conversación (servicio, profesional, fecha, último resultado)
-6. Observabilidad: log de cada tool call
+5. Memoria estructurada de conversación (context JSON en conversations)
+6. Observabilidad: log de cada tool call en `tool_call_logs`
 
-### Lo que NO entra en Fase 1
-- Tools de escritura (no crear, no cancelar citas)
-- Recordatorios automáticos
-- Panel admin
+### Fase 2 — completada
+1. Tools transaccionales: `confirm_appointment`, `cancel_appointment`, `reschedule_appointment`
+2. Politica de cancelacion por tenant (`cancellation_hours_min`, default 24h)
+3. Bypass de politica con `deposit_paid=true`
+4. Reschedule atomico: cancel old → confirm new → rollback si falla
+5. Handoff a humano tras 2 rondas consecutivas de errores en tools
+6. Debounce de mensajes WhatsApp (10s ventana): acumula mensajes rapidos y responde una vez
+7. System prompt optimizado para respuestas cortas estilo WhatsApp
+8. Fecha/hora actual inyectada en system prompt para resolver fechas relativas
+
+### Pendiente para Fase 3
+- Recordatorios automaticos de citas (24h y 2h antes)
+- Panel admin basico para onboarding de tenants
+- Eliminar `OpenAIService.php` (legacy sin uso)
 
 ## Reglas para Claude Code
 

@@ -11,7 +11,10 @@
       "Bash(git merge:*)",
       "Bash(git push:*)",
       "Bash(git stash:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(find C:UsersSEBA.claude -name *.jsonl -not -path */141313f9*)",
+      "Bash(find C:UsersSEBA.claude -name *.jsonl)",
+      "Bash(awk 'NR>=640 && NR<=680' \"C:\\\\Users\\\\SEBA\\\\.claude\\\\projects\\\\c--Users-SEBA-Documents-Proyectos-Autobot-agendAI\\\\141313f9-c665-4f67-82e4-e4af82d67d07.jsonl\")"
     ]
   }
 }

@@ -15,14 +15,24 @@ class WhatsappService
             ? (config('services.waba.test_to') ?: $to)
             : $to;
         Log::channel('api')->info('to:' . $to);
-        $res = Http::withToken(config('services.waba.token'))
+        $response = Http::withToken(config('services.waba.token'))
             ->post($url, [
                 "messaging_product" => "whatsapp",
                 "to" => $to,
                 "type" => "text",
                 "text" => ["body" => $text],
-            ])->json();
+            ]);
 
-        return $res ?? [];
+        $res = $response->json() ?? [];
+
+        if ($response->failed()) {
+            Log::channel('api')->error('WhatsApp send failed', [
+                'to' => $to,
+                'status' => $response->status(),
+                'response' => $res,
+            ]);
+        }
+
+        return $res;
     }
 }

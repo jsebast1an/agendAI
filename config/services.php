@@ -44,6 +44,6 @@ return [
         'phone_id' => env('WABA_PHONE_ID'),
         'verify' => env('WABA_VERIFY_TOKEN'),
         'test_to' => env('WABA_TEST_TO'),
-        'memory_limit' => env('WABA_MEMORY_LIMIT', 10),
+        'memory_limit' => env('WABA_MEMORY_LIMIT', 50),
     ],
 ];
