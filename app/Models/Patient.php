@@ -12,6 +12,7 @@ class Patient extends Model
         'organization_id',
         'wa_id',
         'name',
+        'cedula',
         'phone_number',
     ];
 

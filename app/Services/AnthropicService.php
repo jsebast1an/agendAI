@@ -41,6 +41,18 @@ class AnthropicService
             $messages = $this->buildMessages($history, $userText);
             $context = ['org_id' => $orgId, 'patient_id' => $patientId];
             $conversationContext = $conversation?->context ?? [];
+
+            // Load existing patient data into context if not already present
+            if ($patientId && empty($conversationContext['patient_name'])) {
+                $patient = \App\Models\Patient::find($patientId);
+                if ($patient?->name && $patient->name !== $patient->wa_id) {
+                    $conversationContext['patient_name'] = $patient->name;
+                }
+                if ($patient?->cedula) {
+                    $conversationContext['patient_cedula'] = $patient->cedula;
+                }
+            }
+
             $consecutiveToolErrors = 0;
 
             for ($round = 0; $round < self::MAX_TOOL_ROUNDS; $round++) {
@@ -176,6 +188,7 @@ class AnthropicService
         match ($toolName) {
             'get_availability' => $this->updateAvailabilityContext($context, $input, $result),
             'get_professionals' => $this->updateProfessionalsContext($context, $input),
+            'update_patient' => $this->updatePatientContext($context, $input),
             default => null,
         };
     }
@@ -192,6 +205,16 @@ class AnthropicService
     {
         if (isset($input['service_id'])) {
             $context['selected_service_id'] = $input['service_id'];
+        }
+    }
+
+    private function updatePatientContext(array &$context, array $input): void
+    {
+        if (isset($input['name'])) {
+            $context['patient_name'] = $input['name'];
+        }
+        if (isset($input['cedula'])) {
+            $context['patient_cedula'] = $input['cedula'];
         }
     }
 
@@ -274,6 +297,11 @@ class AnthropicService
                     newProfessionalId: $input['new_professional_id'],
                     newServiceId: $input['new_service_id'],
                     newStartLocal: $input['new_start_local'],
+                ),
+                'update_patient' => $this->tools->updatePatient(
+                    patientId: $context['patient_id'],
+                    name: $input['name'] ?? null,
+                    cedula: $input['cedula'] ?? null,
                 ),
                 default => ['error' => "Unknown tool: {$name}"],
             };
@@ -408,6 +436,18 @@ class AnthropicService
                     'required' => ['appointment_id', 'new_professional_id', 'new_service_id', 'new_start_local'],
                 ],
             ],
+            [
+                'name' => 'update_patient',
+                'description' => 'Update patient name and/or cedula (ID number). Use when the patient provides their full name or cedula.',
+                'input_schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'name' => ['type' => 'string', 'description' => 'Patient full name'],
+                        'cedula' => ['type' => 'string', 'description' => 'Patient cedula (ID number)'],
+                    ],
+                    'required' => [],
+                ],
+            ],
         ];
     }
 
@@ -476,6 +516,15 @@ class AnthropicService
         quiere todo en la MISMA cita. Nadie saca citas separadas para distintos servicios.
         Para la duracion, usa el servicio que dure mas (no sumes duraciones).
 
+        === REGLA DE DATOS ANTES DE CONFIRMAR ===
+
+        ANTES de confirmar cualquier cita, DEBES tener el nombre completo y numero de cedula del paciente.
+        Si no los tienes, pideselos de forma natural DESPUES de que elijan horario, justo antes de confirmar.
+        Usa la tool update_patient para guardar nombre y cedula cuando el paciente los proporcione.
+        Si ya los tienes (aparecen en el CONTEXTO DE ESTA CONVERSACION), NO los pidas de nuevo.
+        Si el paciente pregunta por que necesitas la cedula, explica que es para su ficha clinica.
+        Si se niega, no insistas mas de una vez. Agenda sin cedula y el consultorio lo resolvera.
+
         === LIMITES (humildad logica) ===
 
         - No inventes horarios, precios ni datos. Todo sale de las tools.
@@ -503,6 +552,12 @@ class AnthropicService
 
         Paciente: "quiero limpieza y blanqueamiento"
         Tu: "Dale, las dos en la misma cita. Que dia te queda bien?"
+
+        Paciente: "a las 10 me queda bien"
+        Tu: "Perfecto, limpieza el martes a las 10:00. Me das tu nombre completo y cedula para confirmar?"
+
+        Paciente: "Ana Torres, 1712345678"
+        Tu: (usa update_patient, luego confirm_appointment) "Listo Ana, queda agendada tu limpieza para el martes a las 10:00."
 
         Paciente: "mejor otro dia"
         Tu: "Que dia te funciona?"
@@ -547,6 +602,12 @@ class AnthropicService
         }
         if (isset($context['last_availability_result'])) {
             $lines[] = "- Ultimo resultado de disponibilidad: " . json_encode($context['last_availability_result']);
+        }
+        if (isset($context['patient_name'])) {
+            $lines[] = "- Nombre del paciente: {$context['patient_name']}";
+        }
+        if (isset($context['patient_cedula'])) {
+            $lines[] = "- Cedula del paciente: {$context['patient_cedula']}";
         }
 
         return count($lines) > 1 ? implode("\n", $lines) : '';

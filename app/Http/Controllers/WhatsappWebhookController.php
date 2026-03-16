@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsappWebhookController extends Controller
 {
-    private const DEBOUNCE_SECONDS = 10;
+    private const DEBOUNCE_SECONDS = 2;
 
     public function verify(Request $r)
     {

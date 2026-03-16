@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\Patient;
 use App\Models\Professional;
 use App\Models\Schedule;
 use App\Models\Service;
@@ -169,5 +170,35 @@ class AgendaToolsService
             newServiceId: $newServiceId,
             newStartLocal: $newStartLocal,
         );
+    }
+
+    public function updatePatient(int $patientId, ?string $name = null, ?string $cedula = null): array
+    {
+        try {
+            $patient = Patient::findOrFail($patientId);
+
+            $updates = array_filter([
+                'name' => $name,
+                'cedula' => $cedula,
+            ], fn ($v) => $v !== null);
+
+            if (empty($updates)) {
+                return ['error' => 'No data provided to update'];
+            }
+
+            $patient->update($updates);
+
+            return [
+                'updated' => true,
+                'name' => $patient->name,
+                'cedula' => $patient->cedula,
+            ];
+        } catch (\Throwable $e) {
+            Log::channel('api')->error('update_patient failed', [
+                'patient_id' => $patientId,
+                'error' => $e->getMessage(),
+            ]);
+            return ['error' => 'Failed to update patient data'];
+        }
     }
 }

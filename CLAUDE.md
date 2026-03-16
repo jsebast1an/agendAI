@@ -9,7 +9,7 @@ Multi-tenant — un backend sirve a múltiples consultorios.
 ## Stack
 
 - **Backend:** Laravel 12 (PHP 8.2+) + MySQL
-- **Frontend:** Inertia.js (landing page, no relevante para el agente)
+- **Frontend:** Inertia.js + React 18 + Tailwind CSS (landing page + futuro admin dashboard)
 - **LLM:** Claude API (Anthropic) con tool calling nativo
 - **Canal:** WhatsApp Business API (Meta Graph API v22.0)
 - **Queue:** Laravel Queue (database driver) para debounce de mensajes
@@ -59,7 +59,7 @@ database/seeders/DentalClinicSeeder.php # Seed de clinica dental de prueba (4 pr
 - No usar emojis en código ni en respuestas al usuario
 - **Try-catch obligatorio** en toda operación que pueda fallar (HTTP, DB, API calls). Loggear errores con contexto útil
 - **Código conciso** — no sobre-abstraer, no extender archivos innecesariamente. Métodos cortos y con responsabilidad clara
-- **Frontend:** Tailwind CSS (cuando aplique). No tocar frontend a menos que se pida
+- **Frontend:** React + Inertia + Tailwind CSS + shadcn/ui (pendiente instalar). No tocar landing page a menos que se pida
 
 ## Base de datos actual
 
@@ -113,7 +113,7 @@ El backend es la única fuente de verdad. Claude interpreta intención y mantien
 contexto conversacional, pero nunca inventa horarios, cupos, tarifas ni políticas.
 Todo dato operativo sale de una tool call al backend.
 
-## Fase actual: Fase 2 completada (branch `feature/fase1/start`)
+## Fase actual: Fase 2 completada, puliendo agente (branch `feature/fase1/start`)
 
 ### Fase 1 — completada
 1. Migrar `OpenAIService` → `AnthropicService` (tool calling nativo de Anthropic)
@@ -129,13 +129,23 @@ Todo dato operativo sale de una tool call al backend.
 3. Bypass de politica con `deposit_paid=true`
 4. Reschedule atomico: cancel old → confirm new → rollback si falla
 5. Handoff a humano tras 2 rondas consecutivas de errores en tools
-6. Debounce de mensajes WhatsApp (10s ventana): acumula mensajes rapidos y responde una vez
+6. Debounce de mensajes WhatsApp (10s ventana via queue + Cache lock/pull): acumula mensajes rapidos y responde una vez
 7. System prompt optimizado para respuestas cortas estilo WhatsApp
-8. Fecha/hora actual inyectada en system prompt para resolver fechas relativas
+8. Fecha/hora actual + proximos 7 dias inyectados en system prompt para resolver fechas relativas
+9. Seed de clinica dental de prueba: 4 profesionales, 10 servicios, horarios realistas (`DentalClinicSeeder`)
+
+### Problemas detectados en testing (pendientes de arreglar)
+- **System prompt necesita mas calidez:** cuando el paciente saluda, el agente debe saludar de vuelta antes de ir a la accion
+- **Multiples servicios = una sola cita:** si el paciente pide "limpieza y blanqueamiento", agendar en UNA cita (tomar duracion del servicio mas largo), no sugerir dos citas separadas
+- **Token de Meta expira cada 24h:** en modo test, el token temporal caduca. Generar System User Token permanente para produccion
 
 ### Pendiente para Fase 3
+- Arreglar system prompt (calidez, logica de multi-servicio, calendario correcto)
+- Instalar shadcn + MagicUI para UI
+- Panel admin con dashboard (React + Inertia + Tailwind + shadcn)
 - Recordatorios automaticos de citas (24h y 2h antes)
-- Panel admin basico para onboarding de tenants
+- Onboarding de tenants desde el panel
+- Instalar Playwright para testing E2E
 - Eliminar `OpenAIService.php` (legacy sin uso)
 
 ## Reglas para Claude Code
