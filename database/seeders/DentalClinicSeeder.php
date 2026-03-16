@@ -6,7 +6,9 @@ use App\Models\Organization;
 use App\Models\Professional;
 use App\Models\Schedule;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DentalClinicSeeder extends Seeder
 {
@@ -51,7 +53,19 @@ class DentalClinicSeeder extends Seeder
         $this->seedDraVega($org, $services);
         $this->seedDrSolano($org, $services);
 
+        // ── ADMIN USER ──────────────────────────────────────────────
+        User::updateOrCreate(
+            ['email' => 'admin@sonrisa.ec'],
+            [
+                'name' => 'Admin Sonrisa',
+                'password' => Hash::make('password'),
+                'organization_id' => $org->id,
+                'email_verified_at' => now(),
+            ]
+        );
+
         $this->command->info("Clínica Dental Sonrisa seeded — org_id: {$org->id}");
+        $this->command->info("Admin user: admin@sonrisa.ec / password");
     }
 
     // ── Dra. Martínez — Odontología general + limpieza + extracciones + niños

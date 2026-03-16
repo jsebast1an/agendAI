@@ -34,7 +34,7 @@ export default function Landing() {
                             {/* Títulos (3) */}
                             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
                             Agenda automática con&nbsp;
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-400 to-indigo-400">
+                            <span className="bg-clip-text text-transparent bg-linear-to-r from-fuchsia-400 to-indigo-400">
                                 WhatsApp
                             </span>
                             </h1>
@@ -55,7 +55,7 @@ export default function Landing() {
 
                             {/* Features (3) */}
                             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                                     <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-500/20">
                                         {/* Icono */}
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-fuchsia-300" viewBox="0 0 24 24" fill="currentColor">
@@ -66,7 +66,7 @@ export default function Landing() {
                                     <p className="mt-1 text-xs text-neutral-300">Tus clientes responden 1/2 y tu agenda se actualiza sola.</p>
                                 </div>
 
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                                     <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-300" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M9 12l2 2 4-4M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
@@ -76,7 +76,7 @@ export default function Landing() {
                                     <p className="mt-1 text-xs text-neutral-300">Recordatorios automáticos que sí se leen y responden.</p>
                                 </div>
 
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                                     <div className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M12 3l8 6v12H4V9l8-6zM9 22V12h6v10"/>
@@ -91,7 +91,7 @@ export default function Landing() {
                             <div className="mt-10 flex items-center justify-center gap-3">
                                 <Link
                                     href="/register"
-                                    className="rounded-2xl bg-gradient-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg"
+                                    className="rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg"
                                 >
                                     Comenzar
                                 </Link>

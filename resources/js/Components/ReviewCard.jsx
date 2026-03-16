@@ -43,8 +43,8 @@ export default function ReviewCard({ rating = 5, quote, name, subtitle, avatar, 
     return (
         <article
             className={
-                `rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur
-                shadow-sm hover:shadow transition-shadow ${className}`
+                `rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm
+                shadow-xs hover:shadow-sm transition-shadow ${className}`
             }
         >
             {/* Stars */}

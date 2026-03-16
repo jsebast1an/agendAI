@@ -55,7 +55,7 @@ const accents = {
   const a = accents[accent] ?? accents.indigo;
 
   const CardInner = (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur flex flex-col h-full">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm flex flex-col h-full">
       <div>
             <h3 className="text-lg font-semibold">{title}</h3>
             <div className="mt-1 text-3xl font-bold">
@@ -81,7 +81,7 @@ const accents = {
             className={
                 cta.variant === 'featured'
                 ? 'mt-4 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition'
-                : `mt-4 rounded-xl bg-gradient-to-r ${a.cta} px-4 py-2 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg`
+                : `mt-4 rounded-xl bg-linear-to-r ${a.cta} px-4 py-2 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg`
             }
         >
             {cta.label}
@@ -92,7 +92,7 @@ const accents = {
             className={
                 cta.variant === 'ghost'
                 ? 'mt-auto rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 transition'
-                : `mt-auto rounded-xl bg-gradient-to-r ${a.cta} px-4 py-2 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg`
+                : `mt-auto rounded-xl bg-linear-to-r ${a.cta} px-4 py-2 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg`
             }
         >
             {cta.label}
@@ -104,9 +104,9 @@ const accents = {
   // Envoltura para "featured" con borde degradado + badge
   if (variant === 'featured') {
     return (
-        <div className={`relative rounded-2xl p-[1px] bg-gradient-to-r ${a.ring} h-full z-50`}>
+        <div className={`relative rounded-2xl p-px bg-linear-to-r ${a.ring} h-full z-50`}>
             {badge && (
-                <span className="absolute -top-3 left-5 text-[10px] bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white px-2 py-1 rounded-md shadow z-50">
+                <span className="absolute -top-3 left-5 text-[10px] bg-linear-to-r from-fuchsia-500 to-indigo-500 text-white px-2 py-1 rounded-md shadow-sm z-50">
                     {badge}
                 </span>
             )}

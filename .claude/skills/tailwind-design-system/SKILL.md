@@ -192,7 +192,7 @@ import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
   // Base styles - v4 uses native CSS variables
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -264,7 +264,7 @@ export function Card({
     <div
       ref={ref}
       className={cn(
-        'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
+        'rounded-lg border border-border bg-card text-card-foreground shadow-xs',
         className
       )}
       {...props}
@@ -370,7 +370,7 @@ export function Input({ className, type, error, ref, ...props }: InputProps) {
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           error && 'border-destructive focus-visible:ring-destructive',
           className
         )}
@@ -495,11 +495,11 @@ export function Grid({ className, cols, gap, ...props }: GridProps) {
 const containerVariants = cva('mx-auto w-full px-4 sm:px-6 lg:px-8', {
   variants: {
     size: {
-      sm: 'max-w-screen-sm',
-      md: 'max-w-screen-md',
-      lg: 'max-w-screen-lg',
-      xl: 'max-w-screen-xl',
-      '2xl': 'max-w-screen-2xl',
+      sm: 'max-w-(--breakpoint-sm)',
+      md: 'max-w-(--breakpoint-md)',
+      lg: 'max-w-(--breakpoint-lg)',
+      xl: 'max-w-(--breakpoint-xl)',
+      '2xl': 'max-w-(--breakpoint-2xl)',
       full: 'max-w-full',
     },
   },
@@ -743,7 +743,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // Focus ring utility
 export const focusRing = cn(
-  "focus-visible:outline-none focus-visible:ring-2",
+  "focus-visible:outline-hidden focus-visible:ring-2",
   "focus-visible:ring-ring focus-visible:ring-offset-2",
 );
 
@@ -765,7 +765,7 @@ Define reusable custom utilities:
 
 /* Custom utility for text gradients */
 @utility text-gradient {
-  @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  @apply bg-linear-to-r from-primary to-accent bg-clip-text text-transparent;
 }
 ```
 
