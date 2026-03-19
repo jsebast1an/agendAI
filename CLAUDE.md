@@ -9,7 +9,7 @@ Multi-tenant — un backend sirve a múltiples consultorios.
 ## Stack
 
 - **Backend:** Laravel 12 (PHP 8.2+) + MySQL
-- **Frontend:** Inertia.js + React 18 + Tailwind CSS (landing page + futuro admin dashboard)
+- **Frontend:** Inertia.js + React 18 + Tailwind CSS v4 (landing page + admin dashboard en construccion)
 - **LLM:** Claude API (Anthropic) con tool calling nativo
 - **Canal:** WhatsApp Business API (Meta Graph API v22.0)
 - **Queue:** Laravel Queue (database driver) para debounce de mensajes
@@ -46,6 +46,10 @@ app/
 config/services.php                     # Config de anthropic, waba (tokens, phone_id, etc.)
 routes/api.php                          # POST|GET /webhook/whatsapp
 database/seeders/DentalClinicSeeder.php # Seed de clinica dental de prueba (4 profesionales, 10 servicios)
+.claude/agents/prompt-tester.md        # Agent para simular conversaciones de pacientes y testear el system prompt
+.claude/agents/docs-generator.md       # Agent para generar documentacion del proyecto
+.claude/rules/security.md              # Reglas de seguridad obligatorias para Claude Code
+docs/                                   # Documentacion generada del proyecto
 ```
 
 ## Convenciones de código
@@ -59,7 +63,7 @@ database/seeders/DentalClinicSeeder.php # Seed de clinica dental de prueba (4 pr
 - No usar emojis en código ni en respuestas al usuario
 - **Try-catch obligatorio** en toda operación que pueda fallar (HTTP, DB, API calls). Loggear errores con contexto útil
 - **Código conciso** — no sobre-abstraer, no extender archivos innecesariamente. Métodos cortos y con responsabilidad clara
-- **Frontend:** React + Inertia + Tailwind CSS + shadcn/ui (pendiente instalar). No tocar landing page a menos que se pida
+- **Frontend:** React + Inertia + Tailwind CSS v4. No tocar landing page a menos que se pida
 
 ## Base de datos actual
 
@@ -68,7 +72,7 @@ organizations
 ├── id, name, wa_phone_number (unique), cancellation_hours_min (default 24), timestamps
 
 patients
-├── id, organization_id (FK), wa_id (indexed), name, phone_number, timestamps
+├── id, organization_id (FK), wa_id (indexed), name, phone_number, cedula (nullable), timestamps
 └── unique: [organization_id, wa_id]
 
 professionals
@@ -113,7 +117,7 @@ El backend es la única fuente de verdad. Claude interpreta intención y mantien
 contexto conversacional, pero nunca inventa horarios, cupos, tarifas ni políticas.
 Todo dato operativo sale de una tool call al backend.
 
-## Fase actual: Fase 2 completada, puliendo agente (branch `feature/fase1/start`)
+## Fase actual: Fase 3 en curso — Admin Dashboard (branch `feature/fase1/start`)
 
 ### Fase 1 — completada
 1. Migrar `OpenAIService` → `AnthropicService` (tool calling nativo de Anthropic)
@@ -129,24 +133,31 @@ Todo dato operativo sale de una tool call al backend.
 3. Bypass de politica con `deposit_paid=true`
 4. Reschedule atomico: cancel old → confirm new → rollback si falla
 5. Handoff a humano tras 2 rondas consecutivas de errores en tools
-6. Debounce de mensajes WhatsApp (10s ventana via queue + Cache lock/pull): acumula mensajes rapidos y responde una vez
-7. System prompt optimizado para respuestas cortas estilo WhatsApp
-8. Fecha/hora actual + proximos 7 dias inyectados en system prompt para resolver fechas relativas
-9. Seed de clinica dental de prueba: 4 profesionales, 10 servicios, horarios realistas (`DentalClinicSeeder`)
+6. Debounce de mensajes WhatsApp (10s ventana via queue + Cache lock/pull)
+7. System prompt optimizado: respuestas cortas, calidez, fecha/hora inyectada
+8. Tool `update_patient` para guardar nombre y cedula del paciente antes de confirmar cita
+9. Seed de clinica dental: 4 profesionales, 10 servicios, horarios realistas (`DentalClinicSeeder`)
+10. Tailwind CSS migrado de v3 a v4
 
-### Problemas detectados en testing (pendientes de arreglar)
-- **System prompt necesita mas calidez:** cuando el paciente saluda, el agente debe saludar de vuelta antes de ir a la accion
-- **Multiples servicios = una sola cita:** si el paciente pide "limpieza y blanqueamiento", agendar en UNA cita (tomar duracion del servicio mas largo), no sugerir dos citas separadas
-- **Token de Meta expira cada 24h:** en modo test, el token temporal caduca. Generar System User Token permanente para produccion
+### Fase 3 — en curso
+#### Completado
+- Migracion Tailwind CSS v3 → v4
+- Agentes Claude Code: `prompt-tester`, `docs-generator`
+- Reglas de seguridad: `.claude/rules/security.md`
+- Documentacion generada en `docs/`
 
-### Pendiente para Fase 3
-- Arreglar system prompt (calidez, logica de multi-servicio, calendario correcto)
-- Instalar shadcn + MagicUI para UI
-- Panel admin con dashboard (React + Inertia + Tailwind + shadcn)
+#### Pendiente
+- Panel admin con dashboard (React + Inertia + Tailwind v4): metricas, citas, conversaciones
 - Recordatorios automaticos de citas (24h y 2h antes)
 - Onboarding de tenants desde el panel
-- Instalar Playwright para testing E2E
+- Playwright para testing E2E
+- Arreglar system prompt: multi-servicio en una sola cita (usar duracion del servicio mas largo)
 - Eliminar `OpenAIService.php` (legacy sin uso)
+
+### Notas de produccion
+- **Token de Meta expira cada 24h** en modo test. Renovar desde Meta Developers antes de testear
+- **CACHE_STORE=database** (o file) es obligatorio — `array` no persiste entre procesos
+- **Supervisor** requerido en produccion para mantener `queue:work` activo
 
 ## Reglas para Claude Code
 
