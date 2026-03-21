@@ -56,31 +56,31 @@ export default function Dashboard({ metrics, upcomingAppointments }) {
                     title="Citas hoy"
                     value={metrics.appointmentsToday}
                     icon={<CalendarIcon />}
-                    color="sage"
+                    color="brand"
                 />
                 <MetricCard
                     title="Confirmadas"
                     value={metrics.confirmedTotal}
                     icon={<CheckIcon />}
-                    color="sage"
+                    color="success"
                 />
                 <MetricCard
                     title="Canceladas"
                     value={metrics.cancelledTotal}
                     icon={<XIcon />}
-                    color="red"
+                    color="danger"
                 />
                 <MetricCard
                     title="Pacientes"
                     value={metrics.totalPatients}
                     icon={<UsersIcon />}
-                    color="warm"
+                    color="neutral"
                 />
                 <MetricCard
                     title="Conversaciones"
                     value={metrics.activeConversations}
                     icon={<ChatIcon />}
-                    color="gray"
+                    color="neutral"
                 />
             </div>
 

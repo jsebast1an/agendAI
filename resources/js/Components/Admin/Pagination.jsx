@@ -1,5 +1,8 @@
 import { Link } from '@inertiajs/react';
 
+const decodeLabel = (label) =>
+    label.replace('&laquo;', '«').replace('&raquo;', '»');
+
 export default function Pagination({ links }) {
     if (!links || links.length <= 3) return null;
 
@@ -14,12 +17,13 @@ export default function Pagination({ links }) {
                             ? 'bg-sage-500 text-white font-medium'
                             : link.url
                                 ? 'text-gray-600 hover:bg-cream-100'
-                                : 'text-gray-300 cursor-default'
+                                : 'text-gray-300 cursor-default pointer-events-none'
                     }`}
                     preserveScroll
                     preserveState
-                    dangerouslySetInnerHTML={{ __html: link.label }}
-                />
+                >
+                    {decodeLabel(link.label)}
+                </Link>
             ))}
         </div>
     );

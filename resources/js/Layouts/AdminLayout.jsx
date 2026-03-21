@@ -8,13 +8,13 @@ export default function AdminLayout({ title, children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-cream-50">
+        <div className="flex h-screen bg-[var(--color-canvas)]">
             <Head title={title} />
 
             {/* Mobile overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+                    className="fixed inset-0 z-30 bg-black/60 lg:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
@@ -29,7 +29,7 @@ export default function AdminLayout({ title, children }) {
             {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Top bar */}
-                <header className="h-16 bg-white border-b border-cream-200 flex items-center justify-between px-6 flex-shrink-0">
+                <header className="h-16 bg-[var(--color-surface)] border-b border-[var(--color-border)] flex items-center justify-between px-6 flex-shrink-0">
                     <div className="flex items-center gap-4">
                         {/* Mobile hamburger */}
                         <button
@@ -47,7 +47,7 @@ export default function AdminLayout({ title, children }) {
                         <Dropdown>
                             <Dropdown.Trigger>
                                 <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
-                                    <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 font-medium text-xs">
+                                    <div className="w-8 h-8 rounded-full brand-gradient flex items-center justify-center text-white font-semibold text-xs">
                                         {auth.user.name.charAt(0).toUpperCase()}
                                     </div>
                                     <span className="hidden sm:inline">{auth.user.name}</span>

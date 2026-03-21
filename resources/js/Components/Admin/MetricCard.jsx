@@ -1,15 +1,15 @@
 const colorMap = {
-    sage: 'bg-sage-50 border-sage-200 text-sage-700',
-    warm: 'bg-warm-50 border-warm-200 text-warm-400',
-    gray: 'bg-gray-50 border-gray-200 text-gray-500',
-    red: 'bg-red-50 border-red-200 text-red-500',
+    brand:   'bg-[var(--color-brand-100)] border-[var(--color-brand-200)] text-[var(--color-brand-700)]',
+    success: 'bg-[var(--color-success-bg)] border-[var(--color-success-border)] text-[var(--color-success-text)]',
+    danger:  'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-danger-text)]',
+    neutral: 'bg-gray-50 border-gray-200 text-gray-500',
 };
 
-export default function MetricCard({ title, value, icon, color = 'sage' }) {
-    const colors = colorMap[color] || colorMap.sage;
+export default function MetricCard({ title, value, icon, color = 'brand' }) {
+    const colors = colorMap[color] || colorMap.brand;
 
     return (
-        <div className="bg-white rounded-xl border border-cream-200 p-5 shadow-sm">
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-5 shadow-sm">
             <div className="flex items-start justify-between">
                 <div>
                     <p className="text-sm text-gray-500 font-medium">{title}</p>

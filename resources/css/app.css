@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&display=swap');
 
 @plugin '@tailwindcss/forms';
 
@@ -10,43 +11,65 @@
     'DM Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-  /* Admin palette — cream backgrounds */
-  --color-cream-50: #faf9f6;
-  --color-cream-100: #f5f3ee;
-  --color-cream-200: #e8e4db;
+  /* ─── Brand colors ─────────────────────────────────────────────────────── */
+  /* Primary gradient: fuchsia → indigo (used in landing CTAs, logo accent) */
+  --color-brand-from: #e879f9;   /* fuchsia-400 */
+  --color-brand-to:   #818cf8;   /* indigo-400  */
 
-  /* Sage green — primary accent */
-  --color-sage-50: #f0f4f0;
-  --color-sage-100: #dce5dc;
-  --color-sage-200: #b8ccb8;
-  --color-sage-300: #8fb08f;
-  --color-sage-400: #6b946b;
-  --color-sage-500: #527a52;
-  --color-sage-600: #3f5e3f;
-  --color-sage-700: #2d432d;
+  /* Brand purple scale (derived from fuchsia-400/indigo-400 midpoint) */
+  --color-brand-50:  #faf5ff;
+  --color-brand-100: #f3e8ff;
+  --color-brand-200: #e9d5ff;
+  --color-brand-300: #d8b4fe;
+  --color-brand-400: #c084fc;
+  --color-brand-500: #a855f7;
+  --color-brand-600: #9333ea;
+  --color-brand-700: #7c3aed;
 
-  /* Warm — secondary accent */
-  --color-warm-50: #fdf8f3;
-  --color-warm-100: #f9f0e4;
-  --color-warm-200: #f0dcc4;
-  --color-warm-300: #e4c49d;
-  --color-warm-400: #d4a574;
+  /* ─── Admin UI palette ──────────────────────────────────────────────────── */
+  /* Backgrounds — near-white, soft gray */
+  --color-canvas:     #f9f9fb;   /* page background */
+  --color-surface:    #ffffff;   /* cards, panels */
+  --color-border:     #e5e7eb;   /* gray-200 equivalent */
+  --color-border-soft:#f0f0f4;   /* subtle dividers */
 
-  /* Sidebar — dark muted green */
-  --color-sidebar: #1a2e1a;
-  --color-sidebar-hover: #243524;
-  --color-sidebar-active: #2d432d;
-  --color-sidebar-text: #c8d5c8;
-  --color-sidebar-text-active: #f0f4f0;
+  /* Status colors */
+  --color-success-bg:   #f0fdf4;
+  --color-success-text: #166534;
+  --color-success-border:#bbf7d0;
+  --color-danger-bg:    #fef2f2;
+  --color-danger-text:  #991b1b;
+  --color-danger-border:#fecaca;
+  --color-warning-bg:   #fffbeb;
+  --color-warning-text: #92400e;
+  --color-warning-border:#fde68a;
+
+  /* ─── Sidebar ───────────────────────────────────────────────────────────── */
+  /* Dark sidebar using brand colors */
+  --color-sidebar:            #0f0f13;   /* near-black base */
+  --color-sidebar-hover:      #1a1a24;   /* subtle hover */
+  --color-sidebar-active:     #1e1b2e;   /* active bg (dark purple tint) */
+  --color-sidebar-border:     #1f1f2e;   /* separator lines */
+  --color-sidebar-text:       #9ca3af;   /* muted text */
+  --color-sidebar-text-active:#f9fafb;   /* active/hover text */
+  --color-sidebar-text-muted: #6b7280;   /* org name, secondary */
+}
+
+/* ─── Utility: brand gradient ───────────────────────────────────────────── */
+@layer utilities {
+  .brand-gradient {
+    background: linear-gradient(to right, var(--color-brand-from), var(--color-brand-to));
+  }
+  .brand-gradient-text {
+    background: linear-gradient(to right, var(--color-brand-from), var(--color-brand-to));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Tailwind v4 compatibility: keep border defaults
 */
 @layer base {
   *,

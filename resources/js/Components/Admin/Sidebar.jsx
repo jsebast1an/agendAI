@@ -51,24 +51,25 @@ const LogoutIcon = () => (
 
 export default function Sidebar() {
     const { auth, url } = usePage().props;
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const currentPath = url ? url.split('?')[0] : '';
 
     return (
-        <aside className="w-64 bg-sidebar flex flex-col h-screen flex-shrink-0">
-            {/* Logo + Org */}
-            <div className="px-5 py-6 border-b border-sidebar-hover">
-                <h1 className="text-lg font-bold text-sidebar-text-active tracking-tight">
-                    AgendAI
+        <aside className="w-64 bg-[var(--color-sidebar)] flex flex-col h-screen flex-shrink-0 border-r border-[var(--color-sidebar-border)]">
+            {/* Logo */}
+            <div className="px-5 py-6 border-b border-[var(--color-sidebar-border)]">
+                <h1 className="text-lg font-bold tracking-tight">
+                    <span className="brand-gradient-text">Agend</span>
+                    <span className="text-[var(--color-sidebar-text-active)]">AI</span>
                 </h1>
                 {auth.organization && (
-                    <p className="text-xs text-sidebar-text mt-1 truncate">
+                    <p className="text-xs text-[var(--color-sidebar-text-muted)] mt-1 truncate">
                         {auth.organization.name}
                     </p>
                 )}
             </div>
 
             {/* Main nav */}
-            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 <SidebarLink
                     href={route('admin.dashboard')}
                     active={currentPath === '/admin'}
@@ -100,7 +101,7 @@ export default function Sidebar() {
             </nav>
 
             {/* Bottom nav */}
-            <div className="px-3 py-4 border-t border-sidebar-hover space-y-1">
+            <div className="px-3 py-4 border-t border-[var(--color-sidebar-border)] space-y-0.5">
                 <SidebarLink
                     href={route('profile.edit')}
                     active={currentPath.startsWith('/profile')}
@@ -110,6 +111,8 @@ export default function Sidebar() {
                 </SidebarLink>
                 <SidebarLink
                     href={route('logout')}
+                    method="post"
+                    as="button"
                     icon={<LogoutIcon />}
                 >
                     Cerrar sesion
