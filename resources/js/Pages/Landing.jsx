@@ -3,6 +3,7 @@ import Pricing from '@/Components/Pricing';
 import Reviews, { demoReviews } from '@/Components/Reviews';
 import HowItWorks from '@/Components/HowItWorks';
 import ScrollReveal from '@/Components/ScrollReveal';
+import HeroMockup from '@/Components/HeroMockup';
 
 const WA_DEMO_URL = 'https://wa.me/593979321219?text=Hola,%20quiero%20una%20demo%20de%20AgendAI';
 
@@ -54,72 +55,85 @@ export default function Landing() {
                     }}
                 />
 
-                <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 pb-24 sm:pt-28 sm:pb-32 flex flex-col items-center text-center">
+                <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-16 pb-20 sm:pt-24 sm:pb-28 lg:pt-28 lg:pb-32">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:gap-12">
 
-                    {/* Eyebrow */}
-                    <p
-                        className="animate-fade-up text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-6"
-                        style={{ animationDelay: '0ms' }}
-                    >
-                        WhatsApp · IA · Ecuador
-                    </p>
+                        {/* Left — text */}
+                        <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left">
+                            {/* Eyebrow */}
+                            <p
+                                className="animate-fade-up text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-6"
+                                style={{ animationDelay: '0ms' }}
+                            >
+                                WhatsApp · IA · Ecuador
+                            </p>
 
-                    {/* H1 */}
-                    <h1
-                        className="animate-fade-up text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none max-w-4xl"
-                        style={{ animationDelay: '75ms' }}
-                    >
-                        Tu recepcionista virtual que{' '}
-                        <span className="brand-gradient-text">
-                            nunca duerme
-                        </span>
-                    </h1>
+                            {/* H1 */}
+                            <h1
+                                className="animate-fade-up text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-none"
+                                style={{ animationDelay: '75ms' }}
+                            >
+                                Tu recepcionista virtual que{' '}
+                                <span className="brand-gradient-text">
+                                    nunca duerme
+                                </span>
+                            </h1>
 
-                    {/* Subheadline */}
-                    <p
-                        className="animate-fade-up mt-6 text-base sm:text-lg text-neutral-400 max-w-md leading-relaxed"
-                        style={{ animationDelay: '150ms' }}
-                    >
-                        Agenda, confirma y recuerda citas por WhatsApp — 24 horas, sin que toques el celular.
-                    </p>
+                            {/* Subheadline */}
+                            <p
+                                className="animate-fade-up mt-6 text-base sm:text-lg text-neutral-400 max-w-md leading-relaxed"
+                                style={{ animationDelay: '150ms' }}
+                            >
+                                Agenda, confirma y recuerda citas por WhatsApp — 24 horas, sin que toques el celular.
+                            </p>
 
-                    {/* CTAs */}
-                    <div
-                        className="animate-fade-up mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
-                        style={{ animationDelay: '300ms' }}
-                    >
-                        <a
-                            href={WA_DEMO_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="animate-glow-pulse w-full sm:w-auto rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition text-center"
+                            {/* CTAs */}
+                            <div
+                                className="animate-fade-up mt-8 flex flex-col sm:flex-row items-center lg:items-start gap-3"
+                                style={{ animationDelay: '300ms' }}
+                            >
+                                <a
+                                    href={WA_DEMO_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="animate-glow-pulse w-full sm:w-auto rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition text-center"
+                                >
+                                    Pedir una demo
+                                </a>
+                                <a
+                                    href="#como-funciona"
+                                    onClick={(e) => scrollToSection(e, 'como-funciona')}
+                                    className="w-full sm:w-auto rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition text-center"
+                                >
+                                    Ver cómo funciona
+                                </a>
+                            </div>
+
+                            {/* Stat pills */}
+                            <p
+                                className="animate-fade-up mt-6 text-xs text-neutral-500"
+                                style={{ animationDelay: '500ms' }}
+                            >
+                                80% menos ausencias · 2 min para agendar · Activo desde el día 1
+                            </p>
+
+                            {/* SEO line */}
+                            <p
+                                className="animate-fade-up mt-2 text-[11px] text-neutral-600"
+                                style={{ animationDelay: '600ms' }}
+                            >
+                                Sistema de agendamiento automático por WhatsApp para clínicas y consultorios en Ecuador.
+                            </p>
+                        </div>
+
+                        {/* Right — mockup */}
+                        <div
+                            className="animate-fade-up flex-1 mt-12 lg:mt-0 w-full max-w-lg mx-auto lg:mx-0"
+                            style={{ animationDelay: '400ms' }}
                         >
-                            Pedir una demo
-                        </a>
-                        <a
-                            href="#como-funciona"
-                            onClick={(e) => scrollToSection(e, 'como-funciona')}
-                            className="w-full sm:w-auto rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition text-center"
-                        >
-                            Ver cómo funciona
-                        </a>
+                            <HeroMockup />
+                        </div>
                     </div>
-
-                    {/* Stat pills — replaces feature cards */}
-                    <p
-                        className="animate-fade-up mt-6 text-xs text-neutral-500"
-                        style={{ animationDelay: '500ms' }}
-                    >
-                        80% menos ausencias · 2 min para agendar · Activo desde el día 1
-                    </p>
-
-                    {/* SEO line */}
-                    <p
-                        className="animate-fade-up mt-2 text-[11px] text-neutral-600"
-                        style={{ animationDelay: '600ms' }}
-                    >
-                        Sistema de agendamiento automático por WhatsApp para clínicas y consultorios en Ecuador.
-                    </p>
                 </div>
             </section>
 
