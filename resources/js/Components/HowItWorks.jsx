@@ -1,3 +1,5 @@
+import ScrollReveal from './ScrollReveal';
+
 const steps = [
     {
         n: 1,
@@ -77,7 +79,10 @@ export default function HowItWorks() {
     return (
         <section id="como-funciona" className="w-full py-16 sm:py-20">
             {/* Header */}
-            <div className="text-center mb-12">
+            <ScrollReveal animation="up" className="mb-12">
+                <p className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-3">
+                    Proceso
+                </p>
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                     Así de simple{' '}
                     <span className="bg-clip-text text-transparent bg-linear-to-r from-fuchsia-400 to-indigo-400">
@@ -87,7 +92,7 @@ export default function HowItWorks() {
                 <p className="mt-2 text-sm text-neutral-400">
                     Sin apps extra. Sin capacitación. Solo WhatsApp.
                 </p>
-            </div>
+            </ScrollReveal>
 
             {/* Two columns */}
             <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start max-w-5xl mx-auto">
@@ -95,60 +100,67 @@ export default function HowItWorks() {
                 {/* Left — steps */}
                 <div className="flex-1 w-full">
                     {steps.map((step, i) => (
-                        <div key={step.n} className="flex gap-4">
-                            {/* Line + circle */}
-                            <div className="flex flex-col items-center">
-                                <div className="w-8 h-8 rounded-full bg-linear-to-br from-fuchsia-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                                    {step.n}
-                                </div>
-                                {i < steps.length - 1 && (
-                                    <div className="w-px flex-1 bg-linear-to-b from-fuchsia-500/40 to-indigo-500/10 my-1" />
-                                )}
-                            </div>
-
-                            {/* Content */}
-                            <div className={`pb-8 ${i === steps.length - 1 ? 'pb-0' : ''}`}>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-semibold text-neutral-100">{step.title}</p>
-                                    {step.badge && (
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 border border-white/10 text-neutral-400 font-medium">
-                                            {step.badge}
-                                        </span>
+                        <ScrollReveal key={step.n} animation="left" delay={i * 100}>
+                            <div className="flex gap-4">
+                                {/* Line + circle */}
+                                <div className="flex flex-col items-center">
+                                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-fuchsia-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                        {step.n}
+                                    </div>
+                                    {i < steps.length - 1 && (
+                                        <div className="w-px flex-1 bg-linear-to-b from-fuchsia-500/40 to-indigo-500/10 my-1" />
                                     )}
                                 </div>
-                                <p className="text-xs text-neutral-400 leading-relaxed">{step.desc}</p>
+
+                                {/* Content */}
+                                <div className={`pb-8 ${i === steps.length - 1 ? 'pb-0' : ''}`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <p className="text-sm font-semibold text-neutral-100">{step.title}</p>
+                                        {step.badge && (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 border border-white/10 text-neutral-400 font-medium">
+                                                {step.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-neutral-400 leading-relaxed">{step.desc}</p>
+                                </div>
                             </div>
-                        </div>
+                        </ScrollReveal>
                     ))}
                 </div>
 
                 {/* Right — chat mockup */}
-                <div className="flex-1 w-full max-w-sm mx-auto lg:mx-0">
-                    <div className="rounded-2xl border border-white/10 bg-neutral-900 overflow-hidden shadow-2xl">
-                        {/* Chat header */}
-                        <div className="flex items-center gap-3 px-4 py-3 bg-neutral-800 border-b border-white/8">
-                            <div className="w-8 h-8 rounded-full bg-linear-to-br from-fuchsia-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                                A
+                <ScrollReveal animation="right" delay={200} className="flex-1 w-full max-w-sm mx-auto lg:mx-0">
+                    <div className="animate-float">
+                        <div
+                            className="rounded-2xl border border-white/10 bg-neutral-900 overflow-hidden"
+                            style={{ boxShadow: '0 0 40px -8px rgba(232,121,249,0.3), 0 25px 50px -12px rgba(0,0,0,0.5)' }}
+                        >
+                            {/* Chat header */}
+                            <div className="flex items-center gap-3 px-4 py-3 bg-neutral-800 border-b border-white/8">
+                                <div className="w-8 h-8 rounded-full bg-linear-to-br from-fuchsia-500 to-indigo-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                    A
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-neutral-100">AgendAI — Clínica Dental</p>
+                                    <p className="text-[10px] text-emerald-400">en línea</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-semibold text-neutral-100">AgendAI — Clínica Dental</p>
-                                <p className="text-[10px] text-emerald-400">en línea</p>
+
+                            {/* Messages */}
+                            <div className="px-3 py-4 space-y-0.5 max-h-[420px] overflow-y-auto">
+                                {messages.map((msg, i) => (
+                                    <Bubble key={i} msg={msg} />
+                                ))}
                             </div>
-                        </div>
 
-                        {/* Messages */}
-                        <div className="px-3 py-4 space-y-0.5 max-h-[420px] overflow-y-auto">
-                            {messages.map((msg, i) => (
-                                <Bubble key={i} msg={msg} />
-                            ))}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="px-4 py-2 border-t border-white/8 text-center">
-                            <p className="text-[10px] text-neutral-500">menos de 2 minutos</p>
+                            {/* Footer */}
+                            <div className="px-4 py-2 border-t border-white/8 text-center">
+                                <p className="text-[10px] text-neutral-500">menos de 2 minutos</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </ScrollReveal>
             </div>
         </section>
     );

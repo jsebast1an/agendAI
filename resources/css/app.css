@@ -66,6 +66,70 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* ─── Landing animations ─────────────────────────────────────────────── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(232, 121, 249, 0); }
+    50%       { box-shadow: 0 0 28px 6px rgba(232, 121, 249, 0.35); }
+  }
+
+  /* Instant animations (hero entrance) */
+  .animate-fade-up {
+    animation: fade-up 0.6s ease-out both;
+  }
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  .animate-glow-pulse {
+    animation: glow-pulse 2.5s ease-in-out infinite;
+  }
+
+  /* Scroll-triggered: hidden by default, revealed by IntersectionObserver */
+  .reveal {
+    opacity: 0;
+  }
+  .reveal.revealed {
+    animation-fill-mode: both;
+  }
+  .reveal.revealed.reveal-up {
+    animation: fade-up 0.7s ease-out both;
+  }
+  .reveal.revealed.reveal-left {
+    animation: slide-in-left 0.7s ease-out both;
+  }
+  .reveal.revealed.reveal-right {
+    animation: slide-in-right 0.7s ease-out both;
+  }
+  .reveal.revealed.reveal-scale {
+    animation: scale-in 0.6s ease-out both;
+  }
+  .reveal.revealed.reveal-fade {
+    animation: fade-in 0.8s ease-out both;
+  }
 }
 
 /*

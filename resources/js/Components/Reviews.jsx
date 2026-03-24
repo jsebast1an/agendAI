@@ -1,4 +1,5 @@
 import ReviewCard from './ReviewCard';
+import ScrollReveal from './ScrollReveal';
 
 /**
  * Reviews
@@ -26,14 +27,19 @@ export default function Reviews({
 
     return (
         <section className={`w-full ${className}`}>
-        <div className="mx-auto max-w-6xl px-6">
-            <div className="mb-4">
-            <h3 className="text-xl font-bold tracking-tight">{title}</h3>
-            </div>
+        <div className="mx-auto max-w-6xl">
+            <ScrollReveal animation="up" className="mb-8">
+                <p className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-3">
+                    Testimonios
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{title}</h2>
+            </ScrollReveal>
 
             <div className={`grid ${gridCols} gap-4`}>
             {items.map((r, i) => (
-                <ReviewCard key={i} {...r} />
+                <ScrollReveal key={i} animation="scale" delay={i * 120}>
+                    <ReviewCard {...r} className="h-full" />
+                </ScrollReveal>
             ))}
             </div>
         </div>

@@ -33,8 +33,8 @@ function Initials({ name }) {
  *  - rating: number 0..5
  *  - quote: string
  *  - name: string
- *  - subtitle?: string   (ej. "Bella Studio (Quito)" / "Odontología (Cuenca)")
- *  - avatar?: string     (path relativo a /public, ej: "/images/reviews/ana.jpg")
+ *  - subtitle?: string
+ *  - avatar?: string
  *  - className?: string
  */
 export default function ReviewCard({ rating = 5, quote, name, subtitle, avatar, className = '' }) {
@@ -44,7 +44,7 @@ export default function ReviewCard({ rating = 5, quote, name, subtitle, avatar, 
         <article
             className={
                 `rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm
-                shadow-xs hover:shadow-sm transition-shadow ${className}`
+                shadow-xs hover:shadow-sm hover:border-white/20 transition-all duration-300 ${className}`
             }
         >
             {/* Stars */}
@@ -55,7 +55,7 @@ export default function ReviewCard({ rating = 5, quote, name, subtitle, avatar, 
 
             {/* Quote */}
             <p className="text-sm text-neutral-100 leading-relaxed">
-                <span className="text-neutral-300">“</span>{quote}<span className="text-neutral-300">”</span>
+                <span className="text-neutral-300">"</span>{quote}<span className="text-neutral-300">"</span>
             </p>
 
             {/* Author */}

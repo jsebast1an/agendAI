@@ -19,7 +19,7 @@ export default function PricingCard({ title, price, period, setup, blurb, featur
                 <div className="mt-3">
                     {price ? (
                         <>
-                            <span className="text-3xl font-extrabold">{price}</span>
+                            <span className={`text-4xl font-black ${recommended ? 'brand-gradient-text' : ''}`}>{price}</span>
                             <span className="text-sm text-neutral-400 ml-1">{period}</span>
                         </>
                     ) : (
@@ -90,7 +90,10 @@ export default function PricingCard({ title, price, period, setup, blurb, featur
 
     if (recommended) {
         return (
-            <div className="relative rounded-2xl p-px bg-linear-to-b from-fuchsia-500 via-indigo-500 to-fuchsia-500/20 h-full z-10 overflow-visible mt-3 md:mt-0">
+            <div
+                className="relative rounded-2xl p-px bg-linear-to-b from-fuchsia-500 via-indigo-500 to-fuchsia-500/20 h-full z-10 overflow-visible mt-3 md:mt-0"
+                style={{ boxShadow: '0 0 40px -8px rgba(232,121,249,0.4)' }}
+            >
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-semibold bg-linear-to-r from-fuchsia-500 to-indigo-500 text-white px-3 py-1 rounded-full shadow-sm whitespace-nowrap z-20">
                     Recomendado
                 </span>

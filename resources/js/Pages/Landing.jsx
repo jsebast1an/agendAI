@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import Pricing from '@/Components/Pricing';
 import Reviews, { demoReviews } from '@/Components/Reviews';
 import HowItWorks from '@/Components/HowItWorks';
+import ScrollReveal from '@/Components/ScrollReveal';
 
 const WA_DEMO_URL = 'https://wa.me/593979321219?text=Hola,%20quiero%20una%20demo%20de%20AgendAI';
 
@@ -16,15 +17,21 @@ export default function Landing() {
         <Head title="AgendAI — Agenda automática con WhatsApp" />
         <div className="w-full min-h-screen bg-neutral-950 text-neutral-100">
 
-            <div className="mx-auto max-w-6xl flex flex-col px-4 sm:px-6">
-
-                {/* Navbar */}
-                <header className="flex items-center justify-between py-4 sm:py-5">
+            {/* Sticky Navbar — full width */}
+            <header className="sticky top-0 z-50 w-full backdrop-blur-sm bg-neutral-950/80 border-b border-white/5">
+                <div className="mx-auto max-w-6xl flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5">
                     <div className="flex items-center gap-2">
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white text-neutral-900 font-black text-sm">A</span>
                         <span className="tracking-tight font-semibold">Agend<span className="text-fuchsia-400">AI</span></span>
                     </div>
-                    <nav>
+                    <nav className="flex items-center gap-4">
+                        <a
+                            href="#como-funciona"
+                            onClick={(e) => scrollToSection(e, 'como-funciona')}
+                            className="hidden sm:block text-sm text-neutral-400 hover:text-neutral-100 transition"
+                        >
+                            Cómo funciona
+                        </a>
                         <a
                             href={WA_DEMO_URL}
                             target="_blank"
@@ -34,96 +41,134 @@ export default function Landing() {
                             Pedir una demo
                         </a>
                     </nav>
-                </header>
+                </div>
+            </header>
 
-                {/* Hero */}
-                <main className="flex flex-col items-center py-10 sm:py-16">
-                    <section className="w-full max-w-3xl text-center">
+            {/* Hero — full-bleed with ambient blob */}
+            <section className="relative w-full overflow-hidden">
+                {/* Ambient gradient blob */}
+                <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                        background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,121,249,0.15) 0%, transparent 70%)',
+                    }}
+                />
 
-                        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-                            Tu recepcionista virtual que{' '}
-                            <span className="bg-clip-text text-transparent bg-linear-to-r from-fuchsia-400 to-indigo-400">
-                                nunca duerme
-                            </span>
-                        </h1>
+                <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-20 pb-24 sm:pt-28 sm:pb-32 flex flex-col items-center text-center">
 
-                        <p className="mt-5 text-base sm:text-lg text-neutral-300 max-w-xl mx-auto leading-relaxed">
-                            Deja de perder pacientes por no contestar a tiempo. AgendAI agenda, confirma y recuerda citas por WhatsApp — las 24 horas, sin que toques el celular.
+                    {/* Eyebrow */}
+                    <p
+                        className="animate-fade-up text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-6"
+                        style={{ animationDelay: '0ms' }}
+                    >
+                        WhatsApp · IA · Ecuador
+                    </p>
+
+                    {/* H1 */}
+                    <h1
+                        className="animate-fade-up text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-none max-w-4xl"
+                        style={{ animationDelay: '75ms' }}
+                    >
+                        Tu recepcionista virtual que{' '}
+                        <span className="brand-gradient-text">
+                            nunca duerme
+                        </span>
+                    </h1>
+
+                    {/* Subheadline */}
+                    <p
+                        className="animate-fade-up mt-6 text-base sm:text-lg text-neutral-400 max-w-md leading-relaxed"
+                        style={{ animationDelay: '150ms' }}
+                    >
+                        Agenda, confirma y recuerda citas por WhatsApp — 24 horas, sin que toques el celular.
+                    </p>
+
+                    {/* CTAs */}
+                    <div
+                        className="animate-fade-up mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+                        style={{ animationDelay: '300ms' }}
+                    >
+                        <a
+                            href={WA_DEMO_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="animate-glow-pulse w-full sm:w-auto rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition text-center"
+                        >
+                            Pedir una demo
+                        </a>
+                        <a
+                            href="#como-funciona"
+                            onClick={(e) => scrollToSection(e, 'como-funciona')}
+                            className="w-full sm:w-auto rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition text-center"
+                        >
+                            Ver cómo funciona
+                        </a>
+                    </div>
+
+                    {/* Stat pills — replaces feature cards */}
+                    <p
+                        className="animate-fade-up mt-6 text-xs text-neutral-500"
+                        style={{ animationDelay: '500ms' }}
+                    >
+                        80% menos ausencias · 2 min para agendar · Activo desde el día 1
+                    </p>
+
+                    {/* SEO line */}
+                    <p
+                        className="animate-fade-up mt-2 text-[11px] text-neutral-600"
+                        style={{ animationDelay: '600ms' }}
+                    >
+                        Sistema de agendamiento automático por WhatsApp para clínicas y consultorios en Ecuador.
+                    </p>
+                </div>
+            </section>
+
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+                {/* How it works */}
+                <HowItWorks />
+
+                {/* Pricing */}
+                <div className="w-full mt-4 sm:mt-8">
+                    <Pricing />
+                </div>
+
+                {/* Reviews */}
+                <div className="w-full mt-16 sm:mt-24">
+                    <Reviews items={demoReviews} cols={3} className="py-2" />
+                </div>
+
+                {/* CTA final */}
+                <ScrollReveal animation="up" as="section" className="w-full py-20 sm:py-28 mt-16 sm:mt-24">
+                    <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
+                        <p className="text-xs font-semibold tracking-[0.2em] text-neutral-500 uppercase mb-4">
+                            Empieza hoy
                         </p>
-
-                        {/* CTAs */}
-                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                            <a
-                                href={WA_DEMO_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full sm:w-auto rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-6 py-3 text-sm font-semibold text-neutral-900 hover:opacity-90 transition shadow-lg text-center"
-                            >
-                                Pedir una demo
-                            </a>
-                            <a
-                                href="#como-funciona"
-                                onClick={(e) => scrollToSection(e, 'como-funciona')}
-                                className="w-full sm:w-auto rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition text-center"
-                            >
-                                Ver cómo funciona
-                            </a>
-                        </div>
-
-                        {/* SEO line */}
-                        <p className="mt-4 text-[12px] text-neutral-500 text-center">
-                            Sistema de agendamiento automático por WhatsApp para clínicas y consultorios en Ecuador.
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                            ¿Listo para dejar de{' '}
+                            <span className="brand-gradient-text">perder citas</span>?
+                        </h2>
+                        <p className="mt-4 text-sm sm:text-base text-neutral-400 max-w-md leading-relaxed">
+                            Cuéntanos cómo funciona tu clínica y te mostramos AgendAI en acción — sin compromiso.
                         </p>
-
-                        {/* Feature cards */}
-                        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm text-left">
-                                <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-fuchsia-500/20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-fuchsia-300" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2z"/>
-                                    </svg>
-                                </div>
-                                <p className="text-sm font-semibold leading-snug">"¿Me confirmas la cita?" — tu bot lo pregunta solo</p>
-                            </div>
-
-                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm text-left">
-                                <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-300" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M9 12l2 2 4-4M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                                    </svg>
-                                </div>
-                                <p className="text-sm font-semibold leading-snug">Hasta 80% menos pacientes que no aparecen</p>
-                            </div>
-
-                            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm text-left">
-                                <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-300" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                                    </svg>
-                                </div>
-                                <p className="text-sm font-semibold leading-snug">Funcionando hoy, no en semanas</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* How it works */}
-                    <div className="w-full">
-                        <HowItWorks />
+                        <a
+                            href={WA_DEMO_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="animate-glow-pulse mt-8 inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-fuchsia-400 to-indigo-400 px-7 py-3.5 text-sm font-semibold text-neutral-900 hover:opacity-90 transition"
+                        >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                            </svg>
+                            Pedir una demo
+                        </a>
+                        <p className="mt-4 text-[11px] text-neutral-600">
+                            Sin contratos. Sin tarjeta de crédito. Solo WhatsApp.
+                        </p>
                     </div>
-
-                    {/* Pricing */}
-                    <div className="w-full mt-4 sm:mt-8">
-                        <Pricing />
-                    </div>
-
-                    {/* Reviews */}
-                    <div className="w-full mt-12 sm:mt-16">
-                        <Reviews items={demoReviews} cols={3} className="py-2" />
-                    </div>
-                </main>
+                </ScrollReveal>
 
                 {/* Footer */}
-                <footer className="py-6 text-center text-xs text-neutral-500 border-t border-white/5">
+                <footer className="py-8 text-center text-xs text-neutral-600 border-t border-white/5">
                     © {new Date().getFullYear()} AgendAI — Hecho con Laravel + React + Tailwind
                 </footer>
             </div>

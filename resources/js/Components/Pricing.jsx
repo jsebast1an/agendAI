@@ -1,4 +1,5 @@
 import PricingCard from './PricingCard';
+import ScrollReveal from './ScrollReveal';
 
 const plans = [
     {
@@ -68,16 +69,21 @@ export default function Pricing() {
     return (
         <section className="w-full">
             <div className="max-w-5xl mx-auto px-6 py-4">
-                <div className="mb-6">
-                    <h2 className="text-2xl font-bold tracking-tight">Planes y precios</h2>
-                    <p className="text-sm text-neutral-400 mt-1">
-                        Precios de lanzamiento. Puedes cambiar de plan cuando quieras.
+                <ScrollReveal animation="up" className="mb-8">
+                    <p className="text-xs font-semibold tracking-[0.2em] text-fuchsia-400/70 uppercase mb-3">
+                        Precios de lanzamiento
                     </p>
-                </div>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Planes y precios</h2>
+                    <p className="text-sm text-neutral-400 mt-1">
+                        Puedes cambiar de plan cuando quieras.
+                    </p>
+                </ScrollReveal>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
-                    {plans.map((p) => (
-                        <PricingCard key={p.key} {...p} />
+                    {plans.map((p, i) => (
+                        <ScrollReveal key={p.key} animation="up" delay={i * 150}>
+                            <PricingCard {...p} />
+                        </ScrollReveal>
                     ))}
                 </div>
 
