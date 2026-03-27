@@ -117,7 +117,12 @@ El backend es la única fuente de verdad. Claude interpreta intención y mantien
 contexto conversacional, pero nunca inventa horarios, cupos, tarifas ni políticas.
 Todo dato operativo sale de una tool call al backend.
 
-## Fase actual: Fase 3 en curso — Admin Dashboard (branch `feature/fase1/start`)
+## Dominio y hosting
+- **Dominio:** agenterecepcionista.com (comprado en Hostinger)
+- **Hosting:** Laravel Cloud
+- **Estado:** dominio comprado, pendiente de apuntar a Laravel Cloud y hacer primer deploy
+
+## Fase actual: Fase 3 en curso — Admin Dashboard (branch `main`)
 
 ### Fase 1 — completada
 1. Migrar `OpenAIService` → `AnthropicService` (tool calling nativo de Anthropic)
@@ -145,19 +150,27 @@ Todo dato operativo sale de una tool call al backend.
 - Agentes Claude Code: `prompt-tester`, `docs-generator`
 - Reglas de seguridad: `.claude/rules/security.md`
 - Documentacion generada en `docs/`
+- Landing page rediseñada: hero con mockup (laptop + celular), HowItWorks, Pricing, Reviews con cards, CTA final
+- ScrollReveal component (IntersectionObserver, sin librerias)
+- Favicon SVG con brand colors
+- Animaciones CSS: fade-up, float, glow-pulse, slide-in-left/right, scale-in, fade-in
+- HeroMockup component (SVG inline, laptop + phone overlay)
 
 #### Pendiente
 - Panel admin con dashboard (React + Inertia + Tailwind v4): metricas, citas, conversaciones
 - Recordatorios automaticos de citas (24h y 2h antes)
 - Onboarding de tenants desde el panel
 - Playwright para testing E2E
-- Arreglar system prompt: multi-servicio en una sola cita (usar duracion del servicio mas largo)
 - Eliminar `OpenAIService.php` (legacy sin uso)
+- SEO completo: meta tags, og:image, sitemap, robots.txt, structured data (pendiente de dominio)
+- Primer deploy a Laravel Cloud + apuntar agenterecepcionista.com
 
 ### Notas de produccion
+- **Dominio:** agenterecepcionista.com → Laravel Cloud (pendiente configuracion DNS en Hostinger)
 - **Token de Meta expira cada 24h** en modo test. Renovar desde Meta Developers antes de testear
 - **CACHE_STORE=database** (o file) es obligatorio — `array` no persiste entre procesos
-- **Supervisor** requerido en produccion para mantener `queue:work` activo
+- **Queue workers:** Laravel Cloud los maneja automaticamente (no necesita Supervisor manual)
+- **APP_URL** debe ser `https://agenterecepcionista.com` en produccion
 
 ## Reglas para Claude Code
 

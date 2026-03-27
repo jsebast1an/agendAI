@@ -28,11 +28,11 @@ function Laptop() {
             {/* Screen bezel */}
             <div className="rounded-t-xl border border-[#2a2a2a] bg-[#111] p-1.5 sm:p-2">
                 {/* Screen */}
-                <div className="rounded-lg bg-[#0a0a0f] overflow-hidden">
+                <div className="rounded-lg overflow-hidden" style={{ background: '#0a0a0f' }}>
                     {/* Dashboard header */}
-                    <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 border-b border-[#1e1e2e]">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5" style={{ borderBottom: '1px solid #1e1e2e' }}>
                         <span className="text-[8px] sm:text-[10px] text-neutral-400 font-medium">AgendAI — Dashboard</span>
-                        <span className="text-[6px] sm:text-[8px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">En vivo</span>
+                        <span className="text-[6px] sm:text-[8px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(168,85,247,0.15)', color: '#c4b5fd' }}>En vivo</span>
                     </div>
 
                     {/* Metric cards */}
@@ -44,9 +44,9 @@ function Laptop() {
 
                     {/* Table */}
                     <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-                        <div className="rounded-md border border-[#1e1e2e] overflow-hidden">
+                        <div className="rounded-md overflow-hidden" style={{ border: '1px solid #1e1e2e' }}>
                             {/* Header row */}
-                            <div className="grid grid-cols-4 gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-[5px] sm:text-[7px] text-neutral-500 font-medium bg-[#0d0d18] border-b border-[#1e1e2e]">
+                            <div className="grid grid-cols-4 gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-[5px] sm:text-[7px] text-neutral-500 font-medium" style={{ background: '#0d0d18', borderBottom: '1px solid #1e1e2e' }}>
                                 <span>Paciente</span>
                                 <span>Hora</span>
                                 <span>Servicio</span>
@@ -76,10 +76,17 @@ function MetricCard({ label, value, color }) {
     };
     const c = colorMap[color] || colorMap.purple;
 
+    const styleMap = {
+        purple: { background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', color: '#c4b5fd' },
+        green:  { background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#6ee7b7' },
+        red:    { background: 'rgba(239,68,68,0.1)',  border: '1px solid rgba(239,68,68,0.2)',  color: '#fca5a5' },
+    };
+    const s = styleMap[color] || styleMap.purple;
+
     return (
-        <div className={`rounded-md ${c.bg} border ${c.border} px-2 py-1.5 sm:py-2`}>
+        <div className="rounded-md px-2 py-1.5 sm:py-2" style={{ background: s.background, border: s.border }}>
             <p className="text-[5px] sm:text-[7px] text-neutral-500">{label}</p>
-            <p className={`text-sm sm:text-lg font-bold ${c.text} leading-none mt-0.5`}>{value}</p>
+            <p className="text-sm sm:text-lg font-bold leading-none mt-0.5" style={{ color: s.color }}>{value}</p>
         </div>
     );
 }
@@ -90,12 +97,18 @@ function TableRow({ name, time, service, status, statusColor }) {
         yellow: 'bg-amber-500/15 text-amber-300',
     };
 
+    const badgeStyles = {
+        green:  { background: 'rgba(16,185,129,0.15)', color: '#6ee7b7' },
+        yellow: { background: 'rgba(245,158,11,0.15)', color: '#fcd34d' },
+    };
+    const bs = badgeStyles[statusColor] || badgeStyles.green;
+
     return (
-        <div className="grid grid-cols-4 gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-[5px] sm:text-[7px] text-neutral-300 bg-[#13131f] border-b border-[#1e1e2e] last:border-b-0">
+        <div className="grid grid-cols-4 gap-1 px-2 sm:px-3 py-1 sm:py-1.5 text-[5px] sm:text-[7px] text-neutral-300 last:border-b-0" style={{ background: '#13131f', borderBottom: '1px solid #1e1e2e' }}>
             <span className="truncate">{name}</span>
             <span className="text-neutral-400">{time}</span>
             <span className="text-neutral-400">{service}</span>
-            <span className={`inline-flex self-center w-fit px-1 sm:px-1.5 py-0.5 rounded-full text-[4px] sm:text-[6px] font-medium ${badgeColors[statusColor]}`}>
+            <span className="inline-flex self-center w-fit px-1 sm:px-1.5 py-0.5 rounded-full text-[4px] sm:text-[6px] font-medium" style={bs}>
                 {status}
             </span>
         </div>
