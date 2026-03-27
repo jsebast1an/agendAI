@@ -118,9 +118,15 @@ contexto conversacional, pero nunca inventa horarios, cupos, tarifas ni polític
 Todo dato operativo sale de una tool call al backend.
 
 ## Dominio y hosting
-- **Dominio:** agenterecepcionista.com (comprado en Hostinger)
-- **Hosting:** Laravel Cloud
-- **Estado:** dominio comprado, pendiente de apuntar a Laravel Cloud y hacer primer deploy
+- **Dominio:** agenterecepcionista.com (Hostinger)
+- **Hosting:** Hostinger Business (shared hosting) — `public_html/`
+- **Estado:** LIVE en producción ✓
+- **Deploy:** `git push origin main` local → `git pull origin main` en servidor via SSH
+- **SSH:** PuTTY con clave privada, puerto 65002, sesión guardada como `agendai`
+- **Assets JS:** compilar local con `npm run build` → subir `public/build/` via File Manager
+- **Post-deploy:** `php artisan config:cache && php artisan view:clear`
+- **Cron queue worker:** pendiente configurar en hPanel (`php artisan queue:work --stop-when-empty`)
+- **Nota:** `index.php` está en raíz de `public_html/` (no en `public/`) por limitación de shared hosting
 
 ## Fase actual: Fase 3 en curso — Admin Dashboard (branch `main`)
 
@@ -162,8 +168,10 @@ Todo dato operativo sale de una tool call al backend.
 - Onboarding de tenants desde el panel
 - Playwright para testing E2E
 - Eliminar `OpenAIService.php` (legacy sin uso)
-- SEO completo: meta tags, og:image, sitemap, robots.txt, structured data (pendiente de dominio)
-- Primer deploy a Laravel Cloud + apuntar agenterecepcionista.com
+- SEO completo: meta tags, og:image, sitemap, robots.txt, structured data
+- Configurar cron job en hPanel para queue worker (`* * * * * php artisan queue:work --stop-when-empty --max-time=50`)
+- Configurar webhook de WhatsApp con dominio de producción (agenterecepcionista.com/webhook/whatsapp)
+- Panel admin con dashboard (React + Inertia + Tailwind v4): metricas, citas, conversaciones
 
 ### Notas de produccion
 - **Dominio:** agenterecepcionista.com → Laravel Cloud (pendiente configuracion DNS en Hostinger)
