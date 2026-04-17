@@ -7,6 +7,10 @@
     "playwright": {
       "command": "npx",
       "args": ["@anthropic-ai/mcp-server-playwright"]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     }
   }
 }

@@ -2,6 +2,7 @@ const styles = {
     confirmed: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border-[var(--color-success-border)]',
     cancelled: 'bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border-[var(--color-danger-border)]',
     active:    'bg-[var(--color-brand-100)] text-[var(--color-brand-700)] border-[var(--color-brand-200)]',
+    inactive:  'bg-gray-100 text-gray-500 border-gray-200',
     handoff:   'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border-[var(--color-warning-border)]',
 };
 
@@ -9,6 +10,7 @@ const labels = {
     confirmed: 'Confirmada',
     cancelled: 'Cancelada',
     active:    'Activa',
+    inactive:  'Inactivo',
     handoff:   'Derivada',
 };
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\ConversationController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PatientController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +23,16 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+
+    // Settings — clinic configuration
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/professionals', [SettingsController::class, 'storeProfessional'])->name('settings.professionals.store');
+    Route::put('/settings/professionals/{professional}', [SettingsController::class, 'updateProfessional'])->name('settings.professionals.update');
+    Route::delete('/settings/professionals/{professional}', [SettingsController::class, 'destroyProfessional'])->name('settings.professionals.destroy');
+    Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.services.store');
+    Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.services.update');
+    Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.services.destroy');
+    Route::put('/settings/schedules/{professional}', [SettingsController::class, 'updateSchedules'])->name('settings.schedules.update');
 });
 
 Route::middleware('auth')->group(function () {

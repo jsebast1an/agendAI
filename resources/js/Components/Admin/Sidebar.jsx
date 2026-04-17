@@ -34,6 +34,13 @@ const UsersIcon = () => (
     </svg>
 );
 
+const ClinicIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+);
+
 const SettingsIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -78,6 +85,20 @@ export default function Sidebar() {
                     Dashboard
                 </SidebarLink>
                 <SidebarLink
+                    href={route('admin.settings.index')}
+                    active={currentPath.startsWith('/admin/settings')}
+                    icon={<ClinicIcon />}
+                >
+                    Clínica
+                </SidebarLink>
+
+                <div className="pt-3 pb-1">
+                    <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--color-sidebar-text-muted)]">
+                        Actividad
+                    </p>
+                </div>
+
+                <SidebarLink
                     href={route('admin.appointments.index')}
                     active={currentPath.startsWith('/admin/appointments')}
                     icon={<CalendarIcon />}
@@ -107,7 +128,7 @@ export default function Sidebar() {
                     active={currentPath.startsWith('/profile')}
                     icon={<SettingsIcon />}
                 >
-                    Configuracion
+                    Mi perfil
                 </SidebarLink>
                 <SidebarLink
                     href={route('logout')}
