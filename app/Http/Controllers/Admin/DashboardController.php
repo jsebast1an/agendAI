@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\ClaudeApiLog;
 use App\Models\Conversation;
 use App\Models\Patient;
 use Carbon\Carbon;
@@ -17,6 +18,8 @@ class DashboardController extends Controller
         $orgId = $request->user()->organization_id;
         $todayStart = Carbon::now('America/Guayaquil')->startOfDay()->utc();
         $todayEnd = Carbon::now('America/Guayaquil')->endOfDay()->utc();
+
+        $monthStart = Carbon::now('America/Guayaquil')->startOfMonth()->utc();
 
         return Inertia::render('Admin/Dashboard', [
             'metrics' => [
@@ -35,6 +38,16 @@ class DashboardController extends Controller
                 'activeConversations' => Conversation::where('organization_id', $orgId)
                     ->where('handoff_to_human', false)
                     ->count(),
+                'costToday' => (float) ClaudeApiLog::forOrg($orgId)
+                    ->whereBetween('created_at', [$todayStart, $todayEnd])
+                    ->sum('cost_usd'),
+                'costThisMonth' => (float) ClaudeApiLog::forOrg($orgId)
+                    ->where('created_at', '>=', $monthStart)
+                    ->sum('cost_usd'),
+                'tokensTodayTotal' => (int) ClaudeApiLog::forOrg($orgId)
+                    ->whereBetween('created_at', [$todayStart, $todayEnd])
+                    ->selectRaw('SUM(input_tokens + output_tokens + cache_write_tokens + cache_read_tokens) as total')
+                    ->value('total'),
             ],
             'upcomingAppointments' => Appointment::where('organization_id', $orgId)
                 ->where('start_at', '>=', $todayStart)

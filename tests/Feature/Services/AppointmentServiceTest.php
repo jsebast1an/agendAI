@@ -16,8 +16,11 @@ class AppointmentServiceTest extends TestCase
     use RefreshDatabase;
 
     private Organization $org;
+
     private Patient $patient;
+
     private Professional $professional;
+
     private Service $service;
 
     protected function setUp(): void
@@ -58,7 +61,7 @@ class AppointmentServiceTest extends TestCase
 
     public function test_confirm_creates_appointment_and_returns_summary(): void
     {
-        $service = new AppointmentService();
+        $service = new AppointmentService;
 
         $result = $service->confirm(
             organizationId: $this->org->id,
@@ -84,7 +87,7 @@ class AppointmentServiceTest extends TestCase
 
     public function test_confirm_calculates_end_at_from_duration(): void
     {
-        $service = new AppointmentService();
+        $service = new AppointmentService;
 
         $service->confirm(
             organizationId: $this->org->id,
@@ -102,7 +105,7 @@ class AppointmentServiceTest extends TestCase
 
     public function test_confirm_fails_when_slot_already_taken(): void
     {
-        $service = new AppointmentService();
+        $service = new AppointmentService;
 
         $service->confirm(
             organizationId: $this->org->id,
@@ -126,7 +129,7 @@ class AppointmentServiceTest extends TestCase
 
     public function test_confirm_allows_same_professional_different_time(): void
     {
-        $service = new AppointmentService();
+        $service = new AppointmentService;
 
         $service->confirm(
             organizationId: $this->org->id,
@@ -162,7 +165,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->cancel($appointment->id, $this->patient->id, 'Ya no puedo asistir');
 
         $this->assertArrayNotHasKey('error', $result);
@@ -185,7 +188,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->cancel($appointment->id, $this->patient->id, 'Cambio de planes');
 
         $this->assertArrayHasKey('error', $result);
@@ -211,7 +214,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->cancel($appointment->id, $this->patient->id, 'Quiero cancelar');
 
         $this->assertArrayHasKey('error', $result);
@@ -234,7 +237,7 @@ class AppointmentServiceTest extends TestCase
             'deposit_paid' => true,
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->cancel($appointment->id, $this->patient->id, 'Emergencia');
 
         $this->assertArrayNotHasKey('error', $result);
@@ -243,7 +246,7 @@ class AppointmentServiceTest extends TestCase
 
     public function test_confirm_sets_deposit_paid_flag(): void
     {
-        $service = new AppointmentService();
+        $service = new AppointmentService;
 
         $result = $service->confirm(
             organizationId: $this->org->id,
@@ -271,7 +274,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->cancel($appointment->id, $this->patient->id, 'Cancelar');
 
         $this->assertArrayHasKey('error', $result);
@@ -292,7 +295,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->reschedule(
             appointmentId: $old->id,
             patientId: $this->patient->id,
@@ -320,7 +323,7 @@ class AppointmentServiceTest extends TestCase
             'deposit_paid' => true,
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->reschedule(
             appointmentId: $old->id,
             patientId: $this->patient->id,
@@ -349,7 +352,7 @@ class AppointmentServiceTest extends TestCase
             'deposit_paid' => false,
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->reschedule(
             appointmentId: $old->id,
             patientId: $this->patient->id,
@@ -387,7 +390,7 @@ class AppointmentServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $service = new AppointmentService();
+        $service = new AppointmentService;
         $result = $service->reschedule(
             appointmentId: $old->id,
             patientId: $this->patient->id,

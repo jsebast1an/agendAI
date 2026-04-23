@@ -76,7 +76,7 @@ return [
         'api' => [
             'driver' => 'daily',
             'path' => storage_path('logs/api.log'),
-            'level' => 'debug'
+            'level' => 'debug',
         ],
 
         'slack' => [

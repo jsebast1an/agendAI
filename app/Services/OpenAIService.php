@@ -1,14 +1,17 @@
 <?php
+
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class OpenAIService
 {
     // guarda 6 turnos por usuario en cache (simple)
-    protected function historyKey(string $user): string { return "wa_hist_".$user; }
+    protected function historyKey(string $user): string
+    {
+        return 'wa_hist_'.$user;
+    }
 
     public function replyBasic(string $user, string $userText, $history = []): string
     {
@@ -64,20 +67,19 @@ class OpenAIService
         Habla siempre como alguien que trabaja en el teatro.
         ";
 
-
         $input = trim($historyText) === ''
             ? $userText
             : "Conversation so far:\n{$historyText}\nUser: {$userText}";
 
         $resp = Http::withToken(config('services.openai.key'))
             ->post('https://api.openai.com/v1/responses', [
-                "model" => "gpt-4.1",
-                "input" => $input,
-                "instructions" => $systemPrompt,
-                "temperature" => 0.5
+                'model' => 'gpt-4.1',
+                'input' => $input,
+                'instructions' => $systemPrompt,
+                'temperature' => 0.5,
             ])->json();
 
-        $answer = $resp['output'][0]['content'][0]['text'] ?? "Hola. En que puedo ayudarte?";
+        $answer = $resp['output'][0]['content'][0]['text'] ?? 'Hola. En que puedo ayudarte?';
 
         return $answer;
     }

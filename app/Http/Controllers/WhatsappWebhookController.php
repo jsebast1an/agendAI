@@ -20,6 +20,7 @@ class WhatsappWebhookController extends Controller
         if ($token === config('services.waba.verify')) {
             return $r->get('hub_challenge') ?? $r->get('hub.challenge');
         }
+
         return response('Invalid verify token', 403);
     }
 
@@ -33,7 +34,7 @@ class WhatsappWebhookController extends Controller
             $entry = data_get($payload, 'entry.0.changes.0.value');
             $msg = data_get($entry, 'messages.0');
 
-            if (!is_array($msg)) {
+            if (! is_array($msg)) {
                 return response()->json(['ok' => true]);
             }
 
@@ -44,8 +45,9 @@ class WhatsappWebhookController extends Controller
             Log::channel('api')->info('WA inbound', ['from' => $from, 'business_number' => $businessNumber]);
 
             $org = $tenantResolver->resolve($businessNumber ?? '');
-            if (!$org) {
+            if (! $org) {
                 Log::channel('api')->warning('Unknown business number', ['number' => $businessNumber]);
+
                 return response()->json(['ok' => true]);
             }
 
@@ -62,6 +64,7 @@ class WhatsappWebhookController extends Controller
 
             if ($conversation->handoff_to_human) {
                 Log::channel('api')->info('Conversation in handoff — skipping', ['from' => $from]);
+
                 return response()->json(['ok' => true]);
             }
 
@@ -86,6 +89,7 @@ class WhatsappWebhookController extends Controller
                 'msg' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json(['ok' => false], 200);
         }
     }

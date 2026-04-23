@@ -77,7 +77,7 @@ class AppointmentService
         try {
             $old = Appointment::find($appointmentId);
 
-            if (!$old || $old->status !== 'confirmed') {
+            if (! $old || $old->status !== 'confirmed') {
                 return ['error' => 'Cita no encontrada o ya cancelada.'];
             }
 
@@ -92,7 +92,7 @@ class AppointmentService
             $org = Organization::findOrFail($organizationId);
             $minHours = $org->cancellation_hours_min ?? 24;
 
-            if ($minHours > 0 && !$depositPaid) {
+            if ($minHours > 0 && ! $depositPaid) {
                 $hoursUntil = now()->diffInHours($old->start_at, absolute: false);
                 if ($hoursUntil < $minHours) {
                     return [
@@ -117,12 +117,14 @@ class AppointmentService
 
             if (isset($newResult['error'])) {
                 $old->update(['status' => 'confirmed', 'cancel_reason' => null]);
+
                 return $newResult;
             }
 
             return $newResult;
         } catch (\Throwable $e) {
             Log::channel('api')->error('reschedule failed', ['error' => $e->getMessage()]);
+
             return ['error' => 'No se pudo reprogramar la cita. Intenta nuevamente.'];
         }
     }
@@ -132,7 +134,7 @@ class AppointmentService
         try {
             $appointment = Appointment::find($appointmentId);
 
-            if (!$appointment || $appointment->status !== 'confirmed') {
+            if (! $appointment || $appointment->status !== 'confirmed') {
                 return ['error' => 'Cita no encontrada o ya cancelada.'];
             }
 
@@ -143,7 +145,7 @@ class AppointmentService
             $org = Organization::findOrFail($appointment->organization_id);
             $minHours = $org->cancellation_hours_min ?? 24;
 
-            if ($minHours > 0 && !$appointment->deposit_paid) {
+            if ($minHours > 0 && ! $appointment->deposit_paid) {
                 $hoursUntil = now()->diffInHours($appointment->start_at, absolute: false);
                 if ($hoursUntil < $minHours) {
                     return [

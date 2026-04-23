@@ -182,7 +182,7 @@ class ToolCallLogTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Hola', collect());
 
         $this->assertDatabaseCount('tool_call_logs', 0);

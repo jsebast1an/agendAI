@@ -28,7 +28,7 @@ class AnthropicServiceTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $result = $service->reply('593991234567', 'Quiero agendar una cita', collect());
 
         $this->assertEquals('Hola, en qué puedo ayudarte?', $result);
@@ -60,11 +60,12 @@ class AnthropicServiceTest extends TestCase
             (object) ['role' => 'assistant', 'content' => 'Hola! Bienvenido.'],
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Hay disponibilidad?', $history);
 
         Http::assertSent(function ($request) {
             $messages = $request['messages'];
+
             return count($messages) === 3
                 && $messages[0]['role'] === 'user'
                 && $messages[0]['content'] === 'Hola'
@@ -81,7 +82,7 @@ class AnthropicServiceTest extends TestCase
             'api.anthropic.com/*' => Http::response(['error' => 'server error'], 500),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $result = $service->reply('593991234567', 'Hola', collect());
 
         $this->assertEquals(
@@ -101,7 +102,7 @@ class AnthropicServiceTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Hola', collect());
 
         Http::assertSent(function ($request) {
@@ -121,12 +122,13 @@ class AnthropicServiceTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Qué servicios tienen?', collect(), 1, 1);
 
         Http::assertSent(function ($request) {
             $tools = $request['tools'] ?? [];
             $toolNames = array_column($tools, 'name');
+
             return in_array('get_services', $toolNames)
                 && in_array('get_professionals', $toolNames)
                 && in_array('get_availability', $toolNames)
@@ -180,6 +182,7 @@ class AnthropicServiceTest extends TestCase
                     }
                 }
             }
+
             return false;
         });
     }
@@ -209,11 +212,12 @@ class AnthropicServiceTest extends TestCase
         $conversation->context = $contextData;
         $conversation->expects($this->once())->method('update');
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Hola', collect(), 1, 1, $conversation);
 
         Http::assertSent(function ($request) {
             $system = $request['system'] ?? '';
+
             return str_contains($system, 'CONTEXTO DE ESTA CONVERSACION')
                 && str_contains($system, 'Servicio seleccionado (ID): 5')
                 && str_contains($system, 'Profesional seleccionado (ID): 3')
@@ -232,12 +236,13 @@ class AnthropicServiceTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Hola', collect());
 
         Http::assertSent(function ($request) {
             $system = $request['system'] ?? '';
-            return !str_contains($system, 'CONTEXTO DE ESTA CONVERSACION');
+
+            return ! str_contains($system, 'CONTEXTO DE ESTA CONVERSACION');
         });
     }
 
@@ -285,6 +290,7 @@ class AnthropicServiceTest extends TestCase
             ->method('update')
             ->with($this->callback(function ($data) use (&$savedContext) {
                 $savedContext = $data['context'];
+
                 return true;
             }));
 
@@ -334,6 +340,7 @@ class AnthropicServiceTest extends TestCase
             ->method('update')
             ->with($this->callback(function ($data) use (&$savedContext) {
                 $savedContext = $data['context'];
+
                 return true;
             }));
 
@@ -354,7 +361,7 @@ class AnthropicServiceTest extends TestCase
             ], 200),
         ]);
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         // Should not throw - no conversation means no save
         $result = $service->reply('593991234567', 'Hola', collect());
 
@@ -367,13 +374,14 @@ class AnthropicServiceTest extends TestCase
 
         Http::fake(function ($request) use (&$captured) {
             $captured = $request->data();
+
             return Http::response([
                 'stop_reason' => 'end_turn',
                 'content' => [['type' => 'text', 'text' => 'Ok']],
             ], 200);
         });
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Quiero cancelar mi cita', collect(), 1, 1);
 
         $toolNames = collect($captured['tools'])->pluck('name')->all();
@@ -387,13 +395,14 @@ class AnthropicServiceTest extends TestCase
 
         Http::fake(function ($request) use (&$captured) {
             $captured = $request->data();
+
             return Http::response([
                 'stop_reason' => 'end_turn',
                 'content' => [['type' => 'text', 'text' => 'Ok']],
             ], 200);
         });
 
-        $service = new AnthropicService(new AgendaToolsService());
+        $service = new AnthropicService(new AgendaToolsService);
         $service->reply('593991234567', 'Quiero reprogramar', collect(), 1, 1);
 
         $toolNames = collect($captured['tools'])->pluck('name')->all();

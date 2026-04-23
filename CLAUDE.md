@@ -64,22 +64,29 @@ docs/                                   # Documentacion generada del proyecto
 - **Try-catch obligatorio** en toda operación que pueda fallar (HTTP, DB, API calls). Loggear errores con contexto útil
 - **Código conciso** — no sobre-abstraer, no extender archivos innecesariamente. Métodos cortos y con responsabilidad clara
 - **Frontend:** React + Inertia + Tailwind CSS v4. No tocar landing page a menos que se pida
+- **No usar campos `is_*` booleanos** para clasificaciones que pueden crecer. Preferir campos `type` o `status` con enum. Ej: `type: 'test'|'production'` en vez de `is_test: boolean`
+- **No crear layouts separados** para roles — usar el mismo `AdminLayout` con condicionales React sobre `auth.user.role`
 
 ## Base de datos actual
 
 ```
+users
+├── id, name, email, password, role (enum: superadmin|admin, default: admin)
+├── organization_id (FK nullable — null para superadmin), email_verified_at, timestamps
+
 organizations
-├── id, name, wa_phone_number (unique), cancellation_hours_min (default 24), timestamps
+├── id, name, wa_phone_number (unique), cancellation_hours_min (default 24)
+├── type (enum: production|test, default: production), timestamps
 
 patients
 ├── id, organization_id (FK), wa_id (indexed), name, phone_number, cedula (nullable), timestamps
 └── unique: [organization_id, wa_id]
 
 professionals
-├── id, organization_id (FK), name, specialty, timestamps
+├── id, organization_id (FK), name, specialty, active (bool), timestamps
 
 services
-├── id, organization_id (FK), name, description, timestamps
+├── id, organization_id (FK), name, description, active (bool), timestamps
 
 professional_service (pivot)
 ├── professional_id (FK), service_id (FK), duration_minutes, price
@@ -106,6 +113,12 @@ conversation_messages
 tool_call_logs
 ├── id, organization_id, conversation_id, patient_id, tool_name
 ├── input (JSON), result (JSON), duration_ms, success (bool), error_message, timestamps
+
+claude_api_logs
+├── id, organization_id (FK cascade), conversation_id (FK nullOnDelete nullable)
+├── model (varchar 60), input_tokens, output_tokens, cache_write_tokens, cache_read_tokens
+├── cost_usd (decimal 10,6), created_at (timestampTz, no updated_at)
+└── index: [organization_id, created_at]
 ```
 
 > **Nota:** Todos los datetimes en BD se almacenan en UTC. La conversion a hora local
@@ -161,17 +174,25 @@ Todo dato operativo sale de una tool call al backend.
 - Favicon SVG con brand colors
 - Animaciones CSS: fade-up, float, glow-pulse, slide-in-left/right, scale-in, fade-in
 - HeroMockup component (SVG inline, laptop + phone overlay)
+- Modelo LLM cambiado a Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) para reducir costos
+- Prompt caching implementado: system prompt cacheado + boundary de historial (`cache_control: ephemeral`)
+- `claude_api_logs` tabla + `ClaudeApiLog` model: tracking de tokens y costos USD por organización
+- Admin dashboard: metricas de citas, conversaciones, pacientes, costos de API del mes
+- Sistema de roles: enum `role` en users (`superadmin`|`admin`), middleware `EnsureSuperAdmin`
+- Superadmin (`admin@demo.com`): panel de plataforma con Organizations CRUD + API Logs
+- Organizations: campo `type` enum (`production`|`test`) para marcar orgs de testing
+- Sidebar con condicionales por rol (superadmin ve plataforma, admin ve su org)
+- Platform dashboard: tabs Organizaciones + Logs con métricas globales
 
 #### Pendiente
-- Panel admin con dashboard (React + Inertia + Tailwind v4): metricas, citas, conversaciones
 - Recordatorios automaticos de citas (24h y 2h antes)
-- Onboarding de tenants desde el panel
+- Onboarding de nuevos tenants desde el panel superadmin
 - Playwright para testing E2E
 - Eliminar `OpenAIService.php` (legacy sin uso)
 - SEO completo: meta tags, og:image, sitemap, robots.txt, structured data
 - Configurar cron job en hPanel para queue worker (`* * * * * php artisan queue:work --stop-when-empty --max-time=50`)
 - Configurar webhook de WhatsApp con dominio de producción (agenterecepcionista.com/webhook/whatsapp)
-- Panel admin con dashboard (React + Inertia + Tailwind v4): metricas, citas, conversaciones
+- Fix tests de SettingsController (419 CSRF pre-existente, no relacionado con cambios recientes)
 
 ### Notas de produccion
 - **Dominio:** agenterecepcionista.com → Laravel Cloud (pendiente configuracion DNS en Hostinger)

@@ -12,6 +12,7 @@ class Organization extends Model
         'wa_phone_number',
         'timezone',
         'cancellation_hours_min',
+        'type',
     ];
 
     public function patients(): HasMany
@@ -32,5 +33,10 @@ class Organization extends Model
     public function professionals(): HasMany
     {
         return $this->hasMany(Professional::class);
+    }
+
+    public function apiLogs(): HasMany
+    {
+        return $this->hasMany(ClaudeApiLog::class);
     }
 }

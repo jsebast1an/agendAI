@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class AgendaToolsService
 {
     public function __construct(
-        private readonly AppointmentService $appointmentService = new AppointmentService(),
+        private readonly AppointmentService $appointmentService = new AppointmentService,
     ) {}
 
     public function getServices(int $orgId): array
@@ -25,6 +25,7 @@ class AgendaToolsService
                 ->toArray();
         } catch (\Throwable $e) {
             Log::channel('api')->error('get_services failed', ['org_id' => $orgId, 'error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -42,6 +43,7 @@ class AgendaToolsService
             return $query->get(['id', 'name', 'specialty'])->toArray();
         } catch (\Throwable $e) {
             Log::channel('api')->error('get_professionals failed', ['org_id' => $orgId, 'error' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -86,7 +88,7 @@ class AgendaToolsService
                         return $slotStart < $appt->end_at && $slotEnd > $appt->start_at;
                     });
 
-                    if (!$isBooked) {
+                    if (! $isBooked) {
                         $slots[] = [
                             'start' => $slotStart->format('H:i'),
                             'end' => $slotEnd->format('H:i'),
@@ -104,6 +106,7 @@ class AgendaToolsService
                 'date' => $dateLocal,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -131,6 +134,7 @@ class AgendaToolsService
                 'patient_id' => $patientId,
                 'error' => $e->getMessage(),
             ]);
+
             return [];
         }
     }
@@ -198,6 +202,7 @@ class AgendaToolsService
                 'patient_id' => $patientId,
                 'error' => $e->getMessage(),
             ]);
+
             return ['error' => 'Failed to update patient data'];
         }
     }

@@ -23,7 +23,7 @@ class ProcessConversationJob implements ShouldQueue
     {
         // Only one job processes per conversation at a time
         $lock = Cache::lock("whatsapp.processing.{$this->conversationId}", 30);
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return;
         }
 
@@ -35,7 +35,7 @@ class ProcessConversationJob implements ShouldQueue
             }
 
             $conversation = Conversation::find($this->conversationId);
-            if (!$conversation || $conversation->handoff_to_human) {
+            if (! $conversation || $conversation->handoff_to_human) {
                 return;
             }
 

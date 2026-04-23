@@ -39,7 +39,7 @@ return [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
     ],
-    'waba'   => [
+    'waba' => [
         'token' => env('WABA_TOKEN'),
         'phone_id' => env('WABA_PHONE_ID'),
         'verify' => env('WABA_VERIFY_TOKEN'),

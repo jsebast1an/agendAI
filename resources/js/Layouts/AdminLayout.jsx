@@ -9,7 +9,7 @@ export default function AdminLayout({ title, children }) {
 
     return (
         <div className="flex h-screen bg-[var(--color-canvas)]">
-            <Head title={`${title} - AgendAI`} />
+            <Head title={title} />
 
             {/* Mobile overlay */}
             {sidebarOpen && (

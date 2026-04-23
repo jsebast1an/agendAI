@@ -15,6 +15,7 @@ class SettingsControllerTest extends TestCase
     use RefreshDatabase;
 
     private Organization $org;
+
     private User $user;
 
     protected function setUp(): void
@@ -22,15 +23,15 @@ class SettingsControllerTest extends TestCase
         parent::setUp();
 
         $this->org = Organization::create([
-            'name'             => 'Test Clinic',
-            'wa_phone_number'  => '593991111111',
-            'timezone'         => 'America/Guayaquil',
+            'name' => 'Test Clinic',
+            'wa_phone_number' => '593991111111',
+            'timezone' => 'America/Guayaquil',
         ]);
 
         $this->user = User::create([
-            'name'            => 'Admin User',
-            'email'           => 'admin@test.com',
-            'password'        => bcrypt('password'),
+            'name' => 'Admin User',
+            'email' => 'admin@test.com',
+            'password' => bcrypt('password'),
             'organization_id' => $this->org->id,
         ]);
     }
@@ -55,19 +56,19 @@ class SettingsControllerTest extends TestCase
     public function test_settings_index_only_returns_own_org_data(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other Clinic',
+            'name' => 'Other Clinic',
             'wa_phone_number' => '593992222222',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         Professional::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Dr. Other',
-            'active'          => true,
+            'name' => 'Dr. Other',
+            'active' => true,
         ]);
         Professional::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. Mine',
-            'active'          => true,
+            'name' => 'Dr. Mine',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->get(route('admin.settings.index'));
@@ -83,15 +84,15 @@ class SettingsControllerTest extends TestCase
     {
         $service = Service::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Consulta',
-            'active'          => true,
+            'name' => 'Consulta',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->post(route('admin.settings.professionals.store'), [
-            'name'      => 'Dr. Martinez',
+            'name' => 'Dr. Martinez',
             'specialty' => 'Cardiologia',
-            'active'    => true,
-            'services'  => [
+            'active' => true,
+            'services' => [
                 ['service_id' => $service->id, 'duration_minutes' => 30, 'price' => 50.00],
             ],
         ]);
@@ -99,13 +100,13 @@ class SettingsControllerTest extends TestCase
         $response->assertRedirect(route('admin.settings.index', ['tab' => 'professionals']));
         $this->assertDatabaseHas('professionals', [
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. Martinez',
-            'specialty'       => 'Cardiologia',
+            'name' => 'Dr. Martinez',
+            'specialty' => 'Cardiologia',
         ]);
         $professional = Professional::where('name', 'Dr. Martinez')->first();
         $this->assertDatabaseHas('professional_service', [
-            'professional_id'  => $professional->id,
-            'service_id'       => $service->id,
+            'professional_id' => $professional->id,
+            'service_id' => $service->id,
             'duration_minutes' => 30,
         ]);
     }
@@ -123,18 +124,18 @@ class SettingsControllerTest extends TestCase
     public function test_store_professional_rejects_service_from_other_org(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593993333333',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignService = Service::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Foreign Service',
-            'active'          => true,
+            'name' => 'Foreign Service',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->post(route('admin.settings.professionals.store'), [
-            'name'     => 'Dr. X',
+            'name' => 'Dr. X',
             'services' => [
                 ['service_id' => $foreignService->id, 'duration_minutes' => 30],
             ],
@@ -149,9 +150,9 @@ class SettingsControllerTest extends TestCase
     {
         $professional = Professional::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. Old',
-            'specialty'       => 'General',
-            'active'          => true,
+            'name' => 'Dr. Old',
+            'specialty' => 'General',
+            'active' => true,
         ]);
 
         $this->actingAs($this->user)->put(
@@ -160,8 +161,8 @@ class SettingsControllerTest extends TestCase
         );
 
         $this->assertDatabaseHas('professionals', [
-            'id'        => $professional->id,
-            'name'      => 'Dr. New',
+            'id' => $professional->id,
+            'name' => 'Dr. New',
             'specialty' => 'Pediatria',
         ]);
     }
@@ -169,14 +170,14 @@ class SettingsControllerTest extends TestCase
     public function test_update_professional_from_other_org_returns_403(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593994444444',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignProfessional = Professional::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Dr. Foreign',
-            'active'          => true,
+            'name' => 'Dr. Foreign',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->put(
@@ -194,8 +195,8 @@ class SettingsControllerTest extends TestCase
     {
         $professional = Professional::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. ToDelete',
-            'active'          => true,
+            'name' => 'Dr. ToDelete',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -208,14 +209,14 @@ class SettingsControllerTest extends TestCase
     public function test_destroy_professional_from_other_org_returns_403(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593995555555',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignProfessional = Professional::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Dr. Foreign',
-            'active'          => true,
+            'name' => 'Dr. Foreign',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -230,15 +231,15 @@ class SettingsControllerTest extends TestCase
     public function test_store_service_creates_record(): void
     {
         $response = $this->actingAs($this->user)->post(route('admin.settings.services.store'), [
-            'name'        => 'Limpieza Dental',
+            'name' => 'Limpieza Dental',
             'description' => 'Limpieza profesional',
-            'active'      => true,
+            'active' => true,
         ]);
 
         $response->assertRedirect(route('admin.settings.index', ['tab' => 'services']));
         $this->assertDatabaseHas('services', [
             'organization_id' => $this->org->id,
-            'name'            => 'Limpieza Dental',
+            'name' => 'Limpieza Dental',
         ]);
     }
 
@@ -257,8 +258,8 @@ class SettingsControllerTest extends TestCase
     {
         $service = Service::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Old Service',
-            'active'          => true,
+            'name' => 'Old Service',
+            'active' => true,
         ]);
 
         $this->actingAs($this->user)->put(
@@ -272,14 +273,14 @@ class SettingsControllerTest extends TestCase
     public function test_update_service_from_other_org_returns_403(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593996666666',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignService = Service::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Foreign Service',
-            'active'          => true,
+            'name' => 'Foreign Service',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->put(
@@ -296,8 +297,8 @@ class SettingsControllerTest extends TestCase
     {
         $service = Service::create([
             'organization_id' => $this->org->id,
-            'name'            => 'To Delete',
-            'active'          => true,
+            'name' => 'To Delete',
+            'active' => true,
         ]);
 
         $this->actingAs($this->user)->delete(route('admin.settings.services.destroy', $service));
@@ -308,14 +309,14 @@ class SettingsControllerTest extends TestCase
     public function test_destroy_service_from_other_org_returns_403(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593997777777',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignService = Service::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Foreign',
-            'active'          => true,
+            'name' => 'Foreign',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -330,14 +331,14 @@ class SettingsControllerTest extends TestCase
     {
         $professional = Professional::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. Sched',
-            'active'          => true,
+            'name' => 'Dr. Sched',
+            'active' => true,
         ]);
         Schedule::create([
             'professional_id' => $professional->id,
-            'day_of_week'     => 0,
-            'start_time'      => '08:00',
-            'end_time'        => '12:00',
+            'day_of_week' => 0,
+            'start_time' => '08:00',
+            'end_time' => '12:00',
         ]);
 
         $this->actingAs($this->user)->put(
@@ -360,8 +361,8 @@ class SettingsControllerTest extends TestCase
     {
         $professional = Professional::create([
             'organization_id' => $this->org->id,
-            'name'            => 'Dr. Sched',
-            'active'          => true,
+            'name' => 'Dr. Sched',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->put(
@@ -375,14 +376,14 @@ class SettingsControllerTest extends TestCase
     public function test_update_schedules_from_other_org_returns_403(): void
     {
         $otherOrg = Organization::create([
-            'name'            => 'Other',
+            'name' => 'Other',
             'wa_phone_number' => '593998888888',
-            'timezone'        => 'America/Guayaquil',
+            'timezone' => 'America/Guayaquil',
         ]);
         $foreignProfessional = Professional::create([
             'organization_id' => $otherOrg->id,
-            'name'            => 'Dr. Foreign',
-            'active'          => true,
+            'name' => 'Dr. Foreign',
+            'active' => true,
         ]);
 
         $response = $this->actingAs($this->user)->put(

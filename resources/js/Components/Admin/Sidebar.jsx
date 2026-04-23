@@ -56,9 +56,25 @@ const LogoutIcon = () => (
     </svg>
 );
 
+const OrgsIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+);
+
+const LogsIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+);
+
 export default function Sidebar() {
     const { auth, url } = usePage().props;
     const currentPath = url ? url.split('?')[0] : '';
+    const isSuperAdmin = auth.user?.role === 'superadmin';
 
     return (
         <aside className="w-64 bg-[var(--color-sidebar)] flex flex-col h-screen flex-shrink-0 border-r border-[var(--color-sidebar-border)]">
@@ -68,57 +84,83 @@ export default function Sidebar() {
                     <span className="brand-gradient-text">Agend</span>
                     <span className="text-[var(--color-sidebar-text-active)]">AI</span>
                 </h1>
-                {auth.organization && (
+                {!isSuperAdmin && auth.organization && (
                     <p className="text-xs text-[var(--color-sidebar-text-muted)] mt-1 truncate">
                         {auth.organization.name}
                     </p>
                 )}
+                {isSuperAdmin && (
+                    <p className="text-xs text-[var(--color-sidebar-text-muted)] mt-1">
+                        Plataforma
+                    </p>
+                )}
             </div>
 
-            {/* Main nav */}
+            {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                <SidebarLink
-                    href={route('admin.dashboard')}
-                    active={currentPath === '/admin'}
-                    icon={<DashboardIcon />}
-                >
-                    Dashboard
-                </SidebarLink>
-                <SidebarLink
-                    href={route('admin.settings.index')}
-                    active={currentPath.startsWith('/admin/settings')}
-                    icon={<ClinicIcon />}
-                >
-                    Clínica
-                </SidebarLink>
+                {isSuperAdmin ? (
+                    <>
+                        <SidebarLink
+                            href={route('platform.dashboard', { tab: 'orgs' })}
+                            active={currentPath === '/platform' && !url.includes('tab=logs')}
+                            icon={<OrgsIcon />}
+                        >
+                            Organizaciones
+                        </SidebarLink>
+                        <SidebarLink
+                            href={route('platform.dashboard', { tab: 'logs' })}
+                            active={currentPath === '/platform' && url.includes('tab=logs')}
+                            icon={<LogsIcon />}
+                        >
+                            Logs
+                        </SidebarLink>
+                    </>
+                ) : (
+                    <>
+                        <SidebarLink
+                            href={route('admin.dashboard')}
+                            active={currentPath === '/admin'}
+                            icon={<DashboardIcon />}
+                        >
+                            Dashboard
+                        </SidebarLink>
+                        <SidebarLink
+                            href={route('admin.settings.index')}
+                            active={currentPath.startsWith('/admin/settings')}
+                            icon={<ClinicIcon />}
+                        >
+                            Clínica
+                        </SidebarLink>
 
-                <div className="pt-3 pb-1">
-                    <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--color-sidebar-text-muted)]">
-                        Actividad
-                    </p>
-                </div>
+                        <div className="pt-3 pb-1">
+                            <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--color-sidebar-text-muted)]">
+                                Actividad
+                            </p>
+                        </div>
 
-                <SidebarLink
-                    href={route('admin.appointments.index')}
-                    active={currentPath.startsWith('/admin/appointments')}
-                    icon={<CalendarIcon />}
-                >
-                    Citas
-                </SidebarLink>
-                <SidebarLink
-                    href={route('admin.conversations.index')}
-                    active={currentPath.startsWith('/admin/conversations')}
-                    icon={<ChatIcon />}
-                >
-                    Conversaciones
-                </SidebarLink>
-                <SidebarLink
-                    href={route('admin.patients.index')}
-                    active={currentPath.startsWith('/admin/patients')}
-                    icon={<UsersIcon />}
-                >
-                    Pacientes
-                </SidebarLink>
+                        <SidebarLink
+                            href={route('admin.appointments.index')}
+                            active={currentPath.startsWith('/admin/appointments')}
+                            icon={<CalendarIcon />}
+                        >
+                            Citas
+                        </SidebarLink>
+                        <SidebarLink
+                            href={route('admin.conversations.index')}
+                            active={currentPath.startsWith('/admin/conversations')}
+                            icon={<ChatIcon />}
+                        >
+                            Conversaciones
+                        </SidebarLink>
+                        <SidebarLink
+                            href={route('admin.patients.index')}
+                            active={currentPath.startsWith('/admin/patients')}
+                            icon={<UsersIcon />}
+                        >
+                            Pacientes
+                        </SidebarLink>
+                    </>
+                )}
             </nav>
 
             {/* Bottom nav */}

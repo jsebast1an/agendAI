@@ -16,6 +16,7 @@ class TenantResolverService
                 'wa_business_number' => $waBusinessNumber,
                 'message' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ClaudeApiLog;
 use App\Models\Conversation;
 use App\Models\ToolCallLog;
 use Illuminate\Support\Collection;
@@ -11,9 +12,13 @@ use Illuminate\Support\Facades\Log;
 class AnthropicService
 {
     private string $apiKey;
+
     private string $model;
+
     private string $apiUrl = 'https://api.anthropic.com/v1/messages';
+
     private const MAX_TOOL_ROUNDS = 5;
+
     private const MAX_CONSECUTIVE_TOOL_ERRORS = 2;
 
     public function __construct(private AgendaToolsService $tools)
@@ -64,6 +69,7 @@ class AnthropicService
                         'status' => $response->status(),
                         'body' => $response->body(),
                     ]);
+
                     return $this->fallbackMessage();
                 }
 
@@ -72,6 +78,7 @@ class AnthropicService
 
                 if ($stopReason !== 'tool_use') {
                     $this->saveContext($conversation, $conversationContext);
+
                     return $this->extractText($data);
                 }
 
@@ -81,6 +88,7 @@ class AnthropicService
                     if (($block['type'] ?? '') === 'tool_use' && ($block['input'] ?? null) === []) {
                         $block['input'] = (object) [];
                     }
+
                     return $block;
                 }, $data['content']);
                 $messages[] = ['role' => 'assistant', 'content' => $assistantContent];
@@ -89,7 +97,7 @@ class AnthropicService
                 $messages[] = ['role' => 'user', 'content' => $toolResults];
 
                 $allFailed = collect($toolResults)->every(
-                    fn($r) => str_contains($r['content'] ?? '', '"error"')
+                    fn ($r) => str_contains($r['content'] ?? '', '"error"')
                 );
 
                 if ($allFailed) {
@@ -97,6 +105,7 @@ class AnthropicService
                     if ($consecutiveToolErrors >= self::MAX_CONSECUTIVE_TOOL_ERRORS) {
                         Log::channel('api')->error('Handoff triggered after repeated tool failures', $flowContext);
                         $this->triggerHandoff($conversation);
+
                         return $this->handoffMessage();
                     }
                 } else {
@@ -106,15 +115,25 @@ class AnthropicService
 
             Log::channel('api')->warning('Max tool rounds reached', $flowContext);
             $this->saveContext($conversation, $conversationContext);
+
             return $this->extractText($response->json());
         } catch (\Throwable $e) {
             Log::channel('api')->error('Anthropic exception', [
                 ...$flowContext,
                 'error' => $e->getMessage(),
             ]);
+
             return $this->fallbackMessage();
         }
     }
+
+    // Pricing per million tokens — update if Anthropic changes rates
+    private const PRICING = [
+        'input' => 0.80,   // $0.80 / MTok
+        'output' => 4.00,   // $4.00 / MTok
+        'cache_write' => 1.00,   // $1.00 / MTok
+        'cache_read' => 0.08,   // $0.08 / MTok
+    ];
 
     private function callApi(array $messages, array $context, array $conversationContext): \Illuminate\Http\Client\Response
     {
@@ -135,12 +154,61 @@ class AnthropicService
             $payload['tools'] = $this->toolDefinitions();
         }
 
-        return Http::withHeaders([
+        $response = Http::withHeaders([
             'x-api-key' => $this->apiKey,
             'anthropic-version' => '2023-06-01',
             'anthropic-beta' => 'prompt-caching-2024-07-31',
             'content-type' => 'application/json',
         ])->post($this->apiUrl, $payload);
+
+        if ($response->ok()) {
+            $this->logUsage($response->json('usage', []), $context);
+        }
+
+        return $response;
+    }
+
+    private function logUsage(array $usage, array $context): void
+    {
+        $input = $usage['input_tokens'] ?? 0;
+        $output = $usage['output_tokens'] ?? 0;
+        $cacheWrite = $usage['cache_creation_input_tokens'] ?? 0;
+        $cacheRead = $usage['cache_read_input_tokens'] ?? 0;
+
+        $costUsd =
+            ($input / 1_000_000) * self::PRICING['input'] +
+            ($output / 1_000_000) * self::PRICING['output'] +
+            ($cacheWrite / 1_000_000) * self::PRICING['cache_write'] +
+            ($cacheRead / 1_000_000) * self::PRICING['cache_read'];
+
+        Log::channel('api')->info('API usage', [
+            'org_id' => $context['org_id'] ?? null,
+            'model' => $this->model,
+            'input_tokens' => $input,
+            'output_tokens' => $output,
+            'cache_write_tokens' => $cacheWrite,
+            'cache_read_tokens' => $cacheRead,
+            'cost_usd' => round($costUsd, 6),
+        ]);
+
+        if (empty($context['org_id'])) {
+            return;
+        }
+
+        try {
+            ClaudeApiLog::create([
+                'organization_id' => $context['org_id'],
+                'conversation_id' => $context['conversation_id'] ?? null,
+                'model' => $this->model,
+                'input_tokens' => $input,
+                'output_tokens' => $output,
+                'cache_write_tokens' => $cacheWrite,
+                'cache_read_tokens' => $cacheRead,
+                'cost_usd' => $costUsd,
+            ]);
+        } catch (\Throwable $e) {
+            Log::channel('api')->warning('Failed to persist API usage log', ['error' => $e->getMessage()]);
+        }
     }
 
     private function applyMessageCaching(array $messages): array
@@ -197,7 +265,7 @@ class AnthropicService
                 'tool' => $name,
                 'duration_ms' => $durationMs,
                 'result' => $result,
-                'success' => !$isError,
+                'success' => ! $isError,
             ]);
 
             $this->persistToolLog($flowContext, $name, $input, $result, $durationMs, $isError);
@@ -251,7 +319,7 @@ class AnthropicService
 
     private function saveContext(?Conversation $conversation, array $context): void
     {
-        if ($conversation && !empty($context)) {
+        if ($conversation && ! empty($context)) {
             $conversation->update(['context' => $context]);
         }
     }
@@ -266,13 +334,13 @@ class AnthropicService
     private function handoffMessage(): string
     {
         return 'Lo siento, estoy teniendo dificultades para completar tu solicitud en este momento. '
-            . 'Por favor, comunícate directamente con el consultorio para que puedan ayudarte. '
-            . 'Disculpa los inconvenientes.';
+            .'Por favor, comunícate directamente con el consultorio para que puedan ayudarte. '
+            .'Disculpa los inconvenientes.';
     }
 
     private function persistToolLog(array $flowContext, string $toolName, array $input, mixed $result, float $durationMs, bool $isError): void
     {
-        if (!$flowContext['org_id']) {
+        if (! $flowContext['org_id']) {
             return;
         }
 
@@ -285,7 +353,7 @@ class AnthropicService
                 'input' => $input,
                 'result' => $result,
                 'duration_ms' => (int) $durationMs,
-                'success' => !$isError,
+                'success' => ! $isError,
                 'error_message' => $isError ? ($result['error'] ?? null) : null,
             ]);
         } catch (\Throwable $e) {
@@ -338,6 +406,7 @@ class AnthropicService
             };
         } catch (\Throwable $e) {
             Log::channel('api')->error('Tool execution failed', ['name' => $name, 'error' => $e->getMessage()]);
+
             return ['error' => 'Tool execution failed'];
         }
     }
@@ -345,10 +414,11 @@ class AnthropicService
     private function extractText(array $data): string
     {
         foreach ($data['content'] ?? [] as $block) {
-            if (($block['type'] ?? '') === 'text' && !empty($block['text'])) {
+            if (($block['type'] ?? '') === 'text' && ! empty($block['text'])) {
                 return $block['text'];
             }
         }
+
         return $this->fallbackMessage();
     }
 
@@ -595,20 +665,20 @@ class AnthropicService
         PROMPT;
 
         $now = \Carbon\Carbon::now('America/Guayaquil');
-        $base .= "\n\nFECHA Y HORA ACTUAL: " . $now->translatedFormat('l d \d\e F \d\e Y, H:i') . " (hora Ecuador)";
+        $base .= "\n\nFECHA Y HORA ACTUAL: ".$now->translatedFormat('l d \d\e F \d\e Y, H:i').' (hora Ecuador)';
 
         // Build next 7 days reference so the model doesn't miscalculate weekdays
         $base .= "\nREFERENCIA DE DIAS PROXIMOS:";
         for ($i = 1; $i <= 7; $i++) {
             $day = $now->copy()->addDays($i);
-            $base .= "\n- " . $day->translatedFormat('l') . " = " . $day->format('Y-m-d');
+            $base .= "\n- ".$day->translatedFormat('l').' = '.$day->format('Y-m-d');
         }
 
         $base .= "\nCuando el paciente diga fechas relativas (\"mañana\", \"el lunes\", \"la próxima semana\"), usa la referencia de arriba. Confirma la fecha exacta al paciente antes de consultar disponibilidad.";
 
         $contextBlock = $this->buildContextBlock($conversationContext);
         if ($contextBlock) {
-            $base .= "\n\n" . $contextBlock;
+            $base .= "\n\n".$contextBlock;
         }
 
         return $base;
@@ -620,7 +690,7 @@ class AnthropicService
             return '';
         }
 
-        $lines = ["CONTEXTO DE ESTA CONVERSACION"];
+        $lines = ['CONTEXTO DE ESTA CONVERSACION'];
 
         if (isset($context['selected_service_id'])) {
             $lines[] = "- Servicio seleccionado (ID): {$context['selected_service_id']}";
@@ -632,7 +702,7 @@ class AnthropicService
             $lines[] = "- Fecha preferida: {$context['preferred_date']}";
         }
         if (isset($context['last_availability_result'])) {
-            $lines[] = "- Ultimo resultado de disponibilidad: " . json_encode($context['last_availability_result']);
+            $lines[] = '- Ultimo resultado de disponibilidad: '.json_encode($context['last_availability_result']);
         }
         if (isset($context['patient_name'])) {
             $lines[] = "- Nombre del paciente: {$context['patient_name']}";

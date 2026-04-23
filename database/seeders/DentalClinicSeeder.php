@@ -22,6 +22,7 @@ class DentalClinicSeeder extends Seeder
                 'name' => 'Clínica Dental Sonrisa',
                 'timezone' => 'America/Guayaquil',
                 'cancellation_hours_min' => 24,
+                'type' => 'test',
             ]
         );
 
@@ -61,11 +62,12 @@ class DentalClinicSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'organization_id' => $org->id,
                 'email_verified_at' => now(),
+                'role' => 'admin',
             ]
         );
 
         $this->command->info("Clínica Dental Sonrisa seeded — org_id: {$org->id}");
-        $this->command->info("Admin user: admin@sonrisa.ec / password");
+        $this->command->info('Admin user: admin@sonrisa.ec / password');
     }
 
     // ── Dra. Martínez — Odontología general + limpieza + extracciones + niños
@@ -77,10 +79,10 @@ class DentalClinicSeeder extends Seeder
         );
 
         $prof->services()->syncWithoutDetaching([
-            $services['Consulta General']->id       => ['duration_minutes' => 30, 'price' => 35.00],
-            $services['Limpieza Dental']->id        => ['duration_minutes' => 45, 'price' => 50.00],
-            $services['Extracción Simple']->id      => ['duration_minutes' => 30, 'price' => 40.00],
-            $services['Odontopediatría']->id        => ['duration_minutes' => 30, 'price' => 35.00],
+            $services['Consulta General']->id => ['duration_minutes' => 30, 'price' => 35.00],
+            $services['Limpieza Dental']->id => ['duration_minutes' => 45, 'price' => 50.00],
+            $services['Extracción Simple']->id => ['duration_minutes' => 30, 'price' => 40.00],
+            $services['Odontopediatría']->id => ['duration_minutes' => 30, 'price' => 35.00],
         ]);
 
         // Lun-Vie 8:00-13:00, más tarde Lun/Mié/Vie 15:00-18:00
@@ -97,9 +99,9 @@ class DentalClinicSeeder extends Seeder
         );
 
         $prof->services()->syncWithoutDetaching([
-            $services['Consulta General']->id               => ['duration_minutes' => 30, 'price' => 40.00],
-            $services['Endodoncia']->id                     => ['duration_minutes' => 90, 'price' => 180.00],
-            $services['Implante Dental']->id                => ['duration_minutes' => 120, 'price' => 600.00],
+            $services['Consulta General']->id => ['duration_minutes' => 30, 'price' => 40.00],
+            $services['Endodoncia']->id => ['duration_minutes' => 90, 'price' => 180.00],
+            $services['Implante Dental']->id => ['duration_minutes' => 120, 'price' => 600.00],
             $services['Extracción de Muela del Juicio']->id => ['duration_minutes' => 60, 'price' => 120.00],
         ]);
 
@@ -118,8 +120,8 @@ class DentalClinicSeeder extends Seeder
         );
 
         $prof->services()->syncWithoutDetaching([
-            $services['Consulta General']->id      => ['duration_minutes' => 30, 'price' => 35.00],
-            $services['Ortodoncia']->id            => ['duration_minutes' => 60, 'price' => 80.00],
+            $services['Consulta General']->id => ['duration_minutes' => 30, 'price' => 35.00],
+            $services['Ortodoncia']->id => ['duration_minutes' => 60, 'price' => 80.00],
             $services['Blanqueamiento Dental']->id => ['duration_minutes' => 90, 'price' => 150.00],
         ]);
 
@@ -139,8 +141,8 @@ class DentalClinicSeeder extends Seeder
 
         $prof->services()->syncWithoutDetaching([
             $services['Consulta General']->id => ['duration_minutes' => 30, 'price' => 40.00],
-            $services['Periodoncia']->id      => ['duration_minutes' => 60, 'price' => 90.00],
-            $services['Limpieza Dental']->id  => ['duration_minutes' => 60, 'price' => 70.00],
+            $services['Periodoncia']->id => ['duration_minutes' => 60, 'price' => 90.00],
+            $services['Limpieza Dental']->id => ['duration_minutes' => 60, 'price' => 70.00],
         ]);
 
         // Jue-Vie 8:00-13:00 y 14:00-17:00, Sáb 9:00-12:00

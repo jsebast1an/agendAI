@@ -32,7 +32,7 @@ class PatientResolverServiceTest extends TestCase
             'phone_number' => '593991234567',
         ]);
 
-        $resolver = new PatientResolverService();
+        $resolver = new PatientResolverService;
         $resolved = $resolver->resolve($this->org, '593991234567');
 
         $this->assertEquals($patient->id, $resolved->id);
@@ -41,7 +41,7 @@ class PatientResolverServiceTest extends TestCase
 
     public function test_auto_registers_new_patient_if_not_found(): void
     {
-        $resolver = new PatientResolverService();
+        $resolver = new PatientResolverService;
         $resolved = $resolver->resolve($this->org, '593999999999');
 
         $this->assertNotNull($resolved);
@@ -56,7 +56,7 @@ class PatientResolverServiceTest extends TestCase
 
     public function test_does_not_duplicate_patient_on_repeated_resolve(): void
     {
-        $resolver = new PatientResolverService();
+        $resolver = new PatientResolverService;
         $resolver->resolve($this->org, '593991111111');
         $resolver->resolve($this->org, '593991111111');
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Professional;
-use App\Models\Schedule;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,22 +18,22 @@ class SettingsController extends Controller
             ->with(['services:id,name', 'schedules'])
             ->orderBy('name')
             ->get()
-            ->map(fn($p) => [
-                'id'        => $p->id,
-                'name'      => $p->name,
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
                 'specialty' => $p->specialty,
-                'active'    => $p->active,
-                'services'  => $p->services->map(fn($s) => [
-                    'service_id'       => $s->id,
-                    'name'             => $s->name,
+                'active' => $p->active,
+                'services' => $p->services->map(fn ($s) => [
+                    'service_id' => $s->id,
+                    'name' => $s->name,
                     'duration_minutes' => $s->pivot->duration_minutes,
-                    'price'            => $s->pivot->price,
+                    'price' => $s->pivot->price,
                 ]),
-                'schedules' => $p->schedules->map(fn($sc) => [
-                    'id'          => $sc->id,
+                'schedules' => $p->schedules->map(fn ($sc) => [
+                    'id' => $sc->id,
                     'day_of_week' => $sc->day_of_week,
-                    'start_time'  => $sc->start_time,
-                    'end_time'    => $sc->end_time,
+                    'start_time' => $sc->start_time,
+                    'end_time' => $sc->end_time,
                 ]),
             ]);
 
@@ -44,8 +43,8 @@ class SettingsController extends Controller
 
         return Inertia::render('Admin/Settings/Index', [
             'professionals' => $professionals,
-            'services'      => $services,
-            'tab'           => $request->input('tab', 'professionals'),
+            'services' => $services,
+            'tab' => $request->input('tab', 'professionals'),
         ]);
     }
 
@@ -56,20 +55,20 @@ class SettingsController extends Controller
         $orgId = $request->user()->organization_id;
 
         $validated = $request->validate([
-            'name'                        => 'required|string|max:100',
-            'specialty'                   => 'nullable|string|max:100',
-            'active'                      => 'boolean',
-            'services'                    => 'array',
-            'services.*.service_id'       => ['required', 'integer', "exists:services,id,organization_id,{$orgId}"],
+            'name' => 'required|string|max:100',
+            'specialty' => 'nullable|string|max:100',
+            'active' => 'boolean',
+            'services' => 'array',
+            'services.*.service_id' => ['required', 'integer', "exists:services,id,organization_id,{$orgId}"],
             'services.*.duration_minutes' => 'required|integer|min:5|max:480',
-            'services.*.price'            => 'nullable|numeric|min:0',
+            'services.*.price' => 'nullable|numeric|min:0',
         ]);
 
         $professional = Professional::create([
             'organization_id' => $orgId,
-            'name'            => $validated['name'],
-            'specialty'       => $validated['specialty'] ?? null,
-            'active'          => $validated['active'] ?? true,
+            'name' => $validated['name'],
+            'specialty' => $validated['specialty'] ?? null,
+            'active' => $validated['active'] ?? true,
         ]);
 
         $this->syncServices($professional, $validated['services'] ?? []);
@@ -85,19 +84,19 @@ class SettingsController extends Controller
         abort_if($professional->organization_id !== $orgId, 403);
 
         $validated = $request->validate([
-            'name'                        => 'required|string|max:100',
-            'specialty'                   => 'nullable|string|max:100',
-            'active'                      => 'boolean',
-            'services'                    => 'array',
-            'services.*.service_id'       => ['required', 'integer', "exists:services,id,organization_id,{$orgId}"],
+            'name' => 'required|string|max:100',
+            'specialty' => 'nullable|string|max:100',
+            'active' => 'boolean',
+            'services' => 'array',
+            'services.*.service_id' => ['required', 'integer', "exists:services,id,organization_id,{$orgId}"],
             'services.*.duration_minutes' => 'required|integer|min:5|max:480',
-            'services.*.price'            => 'nullable|numeric|min:0',
+            'services.*.price' => 'nullable|numeric|min:0',
         ]);
 
         $professional->update([
-            'name'      => $validated['name'],
+            'name' => $validated['name'],
             'specialty' => $validated['specialty'] ?? null,
-            'active'    => $validated['active'] ?? true,
+            'active' => $validated['active'] ?? true,
         ]);
 
         $this->syncServices($professional, $validated['services'] ?? []);
@@ -126,16 +125,16 @@ class SettingsController extends Controller
         $orgId = $request->user()->organization_id;
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
-            'active'      => 'boolean',
+            'active' => 'boolean',
         ]);
 
         Service::create([
             'organization_id' => $orgId,
-            'name'            => $validated['name'],
-            'description'     => $validated['description'] ?? null,
-            'active'          => $validated['active'] ?? true,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'active' => $validated['active'] ?? true,
         ]);
 
         return redirect()
@@ -149,15 +148,15 @@ class SettingsController extends Controller
         abort_if($service->organization_id !== $orgId, 403);
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:500',
-            'active'      => 'boolean',
+            'active' => 'boolean',
         ]);
 
         $service->update([
-            'name'        => $validated['name'],
+            'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'active'      => $validated['active'] ?? true,
+            'active' => $validated['active'] ?? true,
         ]);
 
         return redirect()
@@ -185,10 +184,10 @@ class SettingsController extends Controller
         abort_if($professional->organization_id !== $orgId, 403);
 
         $validated = $request->validate([
-            'schedules'               => 'array',
+            'schedules' => 'array',
             'schedules.*.day_of_week' => 'required|integer|between:0,6',
-            'schedules.*.start_time'  => 'required|date_format:H:i',
-            'schedules.*.end_time'    => 'required|date_format:H:i',
+            'schedules.*.start_time' => 'required|date_format:H:i',
+            'schedules.*.end_time' => 'required|date_format:H:i',
         ]);
 
         $professional->schedules()->delete();
@@ -196,8 +195,8 @@ class SettingsController extends Controller
         foreach ($validated['schedules'] ?? [] as $sc) {
             $professional->schedules()->create([
                 'day_of_week' => $sc['day_of_week'],
-                'start_time'  => $sc['start_time'],
-                'end_time'    => $sc['end_time'],
+                'start_time' => $sc['start_time'],
+                'end_time' => $sc['end_time'],
             ]);
         }
 
@@ -212,9 +211,9 @@ class SettingsController extends Controller
     {
         $syncData = collect($services)
             ->keyBy('service_id')
-            ->map(fn($s) => [
+            ->map(fn ($s) => [
                 'duration_minutes' => $s['duration_minutes'],
-                'price'            => $s['price'] ?? null,
+                'price' => $s['price'] ?? null,
             ])
             ->all();
 

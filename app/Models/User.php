@@ -23,11 +23,17 @@ class User extends Authenticatable
         'email',
         'password',
         'organization_id',
+        'role',
     ];
 
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
     }
 
     /**

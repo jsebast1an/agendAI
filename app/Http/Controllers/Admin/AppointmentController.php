@@ -43,7 +43,7 @@ class AppointmentController extends Controller
                 'professional' => $appt->professional?->name ?? '-',
                 'service' => $appt->service?->name ?? '-',
                 'date' => $appt->start_at->setTimezone('America/Guayaquil')->format('d/m/Y'),
-                'time' => $appt->start_at->setTimezone('America/Guayaquil')->format('H:i') . ' - ' . $appt->end_at->setTimezone('America/Guayaquil')->format('H:i'),
+                'time' => $appt->start_at->setTimezone('America/Guayaquil')->format('H:i').' - '.$appt->end_at->setTimezone('America/Guayaquil')->format('H:i'),
                 'status' => $appt->status,
                 'deposit_paid' => $appt->deposit_paid,
             ]);

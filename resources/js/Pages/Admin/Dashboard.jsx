@@ -38,6 +38,24 @@ const ChatIcon = () => (
     </svg>
 );
 
+const DollarIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+    </svg>
+);
+
+const CpuIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <rect x="9" y="9" width="6" height="6" />
+        <line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" />
+        <line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" />
+        <line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="15" x2="23" y2="15" />
+        <line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="15" x2="4" y2="15" />
+    </svg>
+);
+
 const columns = [
     { key: 'patient', label: 'Paciente' },
     { key: 'service', label: 'Servicio' },
@@ -46,6 +64,18 @@ const columns = [
     { key: 'time', label: 'Hora' },
     { key: 'status', label: 'Estado', render: (row) => <StatusBadge status={row.status} /> },
 ];
+
+function formatCost(usd) {
+    if (usd === 0) return '$0.00';
+    if (usd < 0.01) return `$${usd.toFixed(4)}`;
+    return `$${usd.toFixed(2)}`;
+}
+
+function formatTokens(n) {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return String(n);
+}
 
 export default function Dashboard({ metrics, upcomingAppointments }) {
     return (
@@ -80,6 +110,28 @@ export default function Dashboard({ metrics, upcomingAppointments }) {
                     title="Conversaciones"
                     value={metrics.activeConversations}
                     icon={<ChatIcon />}
+                    color="neutral"
+                />
+            </div>
+
+            {/* AI cost metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <MetricCard
+                    title="Costo hoy (IA)"
+                    value={formatCost(metrics.costToday)}
+                    icon={<DollarIcon />}
+                    color="neutral"
+                />
+                <MetricCard
+                    title="Costo este mes (IA)"
+                    value={formatCost(metrics.costThisMonth)}
+                    icon={<DollarIcon />}
+                    color="neutral"
+                />
+                <MetricCard
+                    title="Tokens hoy"
+                    value={formatTokens(metrics.tokensTodayTotal)}
+                    icon={<CpuIcon />}
                     color="neutral"
                 />
             </div>

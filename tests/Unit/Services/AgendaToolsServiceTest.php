@@ -17,8 +17,11 @@ class AgendaToolsServiceTest extends TestCase
     use RefreshDatabase;
 
     private Organization $org;
+
     private Professional $professional;
+
     private Service $service;
+
     private Patient $patient;
 
     protected function setUp(): void
@@ -64,7 +67,7 @@ class AgendaToolsServiceTest extends TestCase
             'active' => false,
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getServices($this->org->id);
 
         $this->assertCount(1, $result);
@@ -73,7 +76,7 @@ class AgendaToolsServiceTest extends TestCase
 
     public function test_get_services_returns_empty_for_unknown_org(): void
     {
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getServices(9999);
 
         $this->assertCount(0, $result);
@@ -89,7 +92,7 @@ class AgendaToolsServiceTest extends TestCase
             'active' => false,
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getProfessionals($this->org->id);
 
         $this->assertCount(1, $result);
@@ -104,7 +107,7 @@ class AgendaToolsServiceTest extends TestCase
             'specialty' => 'Dermatología',
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getProfessionals($this->org->id, $this->service->id);
 
         $this->assertCount(1, $result);
@@ -126,7 +129,7 @@ class AgendaToolsServiceTest extends TestCase
         // Find next Monday
         $monday = now()->next('Monday')->format('Y-m-d');
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getAvailability($this->professional->id, $this->service->id, $monday);
 
         // 09:00-11:00 with 30min slots = 4 slots (09:00, 09:30, 10:00, 10:30)
@@ -157,7 +160,7 @@ class AgendaToolsServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getAvailability($this->professional->id, $this->service->id, $monday);
 
         // Should have 3 slots: 09:30, 10:00, 10:30 (09:00 is booked)
@@ -169,7 +172,7 @@ class AgendaToolsServiceTest extends TestCase
     {
         $tuesday = now()->next('Tuesday')->format('Y-m-d');
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->getAvailability($this->professional->id, $this->service->id, $tuesday);
 
         $this->assertCount(0, $result);
@@ -197,8 +200,8 @@ class AgendaToolsServiceTest extends TestCase
             'patient_id' => $this->patient->id,
             'professional_id' => $this->professional->id,
             'service_id' => $this->service->id,
-            'start_at' => now()->subDays(2)->format('Y-m-d') . ' 10:00:00',
-            'end_at' => now()->subDays(2)->format('Y-m-d') . ' 10:30:00',
+            'start_at' => now()->subDays(2)->format('Y-m-d').' 10:00:00',
+            'end_at' => now()->subDays(2)->format('Y-m-d').' 10:30:00',
             'status' => 'confirmed',
         ]);
 
@@ -213,7 +216,7 @@ class AgendaToolsServiceTest extends TestCase
             'status' => 'cancelled',
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->listUpcomingAppointments($this->patient->id);
 
         $this->assertCount(1, $result);
@@ -225,7 +228,7 @@ class AgendaToolsServiceTest extends TestCase
 
     public function test_confirm_appointment_delegates_to_appointment_service(): void
     {
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->confirmAppointment(
             organizationId: $this->org->id,
             patientId: $this->patient->id,
@@ -252,7 +255,7 @@ class AgendaToolsServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->cancelAppointment(
             appointmentId: $appointment->id,
             patientId: $this->patient->id,
@@ -275,7 +278,7 @@ class AgendaToolsServiceTest extends TestCase
             'status' => 'confirmed',
         ]);
 
-        $tools = new AgendaToolsService();
+        $tools = new AgendaToolsService;
         $result = $tools->rescheduleAppointment(
             appointmentId: $old->id,
             patientId: $this->patient->id,

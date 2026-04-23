@@ -18,7 +18,7 @@ class TenantResolverServiceTest extends TestCase
             'wa_phone_number' => '593991000001',
         ]);
 
-        $resolver = new TenantResolverService();
+        $resolver = new TenantResolverService;
         $resolved = $resolver->resolve('593991000001');
 
         $this->assertNotNull($resolved);
@@ -27,7 +27,7 @@ class TenantResolverServiceTest extends TestCase
 
     public function test_returns_null_for_unknown_business_number(): void
     {
-        $resolver = new TenantResolverService();
+        $resolver = new TenantResolverService;
         $resolved = $resolver->resolve('999999999999');
 
         $this->assertNull($resolved);
