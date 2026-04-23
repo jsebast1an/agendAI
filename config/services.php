@@ -37,7 +37,7 @@ return [
     'openai' => ['key' => env('OPENAI_API_KEY')],
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
-        'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-4-20250514'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
     ],
     'waba'   => [
         'token' => env('WABA_TOKEN'),

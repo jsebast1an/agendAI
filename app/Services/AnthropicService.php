@@ -19,7 +19,7 @@ class AnthropicService
     public function __construct(private AgendaToolsService $tools)
     {
         $this->apiKey = config('services.anthropic.key');
-        $this->model = config('services.anthropic.model', 'claude-sonnet-4-20250514');
+        $this->model = config('services.anthropic.model', 'claude-haiku-4-5-20251001');
     }
 
     public function reply(
@@ -121,8 +121,14 @@ class AnthropicService
         $payload = [
             'model' => $this->model,
             'max_tokens' => 1024,
-            'system' => $this->systemPrompt($conversationContext),
-            'messages' => $messages,
+            'system' => [
+                [
+                    'type' => 'text',
+                    'text' => $this->systemPrompt($conversationContext),
+                    'cache_control' => ['type' => 'ephemeral'],
+                ],
+            ],
+            'messages' => $this->applyMessageCaching($messages),
         ];
 
         if ($context['org_id']) {
@@ -132,8 +138,33 @@ class AnthropicService
         return Http::withHeaders([
             'x-api-key' => $this->apiKey,
             'anthropic-version' => '2023-06-01',
+            'anthropic-beta' => 'prompt-caching-2024-07-31',
             'content-type' => 'application/json',
         ])->post($this->apiUrl, $payload);
+    }
+
+    private function applyMessageCaching(array $messages): array
+    {
+        // Cache the stable history boundary: the message just before the last user turn.
+        // This lets Anthropic reuse the prefix on every round of the tool loop.
+        $count = count($messages);
+        if ($count < 2) {
+            return $messages;
+        }
+
+        $targetIdx = $count - 2;
+        $msg = $messages[$targetIdx];
+
+        if (is_string($msg['content'])) {
+            $messages[$targetIdx]['content'] = [
+                ['type' => 'text', 'text' => $msg['content'], 'cache_control' => ['type' => 'ephemeral']],
+            ];
+        } elseif (is_array($msg['content'])) {
+            $last = count($msg['content']) - 1;
+            $messages[$targetIdx]['content'][$last]['cache_control'] = ['type' => 'ephemeral'];
+        }
+
+        return $messages;
     }
 
     private function executeTools(array $content, array $context, array &$conversationContext, array $flowContext = []): array

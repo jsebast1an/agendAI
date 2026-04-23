@@ -15,7 +15,16 @@ export default function Landing() {
 
     return (
         <>
-        <Head title="AgendAI — Agenda automática con WhatsApp" />
+        <Head>
+            <title>AgendAI | Recepcionista Virtual por WhatsApp para Clínicas en Ecuador</title>
+            <meta name="description" content="Agenda, confirma y recuerda citas por WhatsApp, 24/7, sin que toques el celular. Activo desde el primer día para consultorios médicos en Ecuador." />
+            <meta property="og:title" content="AgendAI | Recepcionista Virtual por WhatsApp para Clínicas en Ecuador" />
+            <meta property="og:description" content="Agenda, confirma y recuerda citas por WhatsApp, 24/7, sin que toques el celular. Activo desde el primer día para consultorios médicos en Ecuador." />
+            <meta property="og:type" content="website" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="AgendAI | Recepcionista Virtual por WhatsApp para Clínicas en Ecuador" />
+            <meta name="twitter:description" content="Agenda, confirma y recuerda citas por WhatsApp, 24/7, sin que toques el celular. Activo desde el primer día para consultorios médicos en Ecuador." />
+        </Head>
         <div className="w-full min-h-screen bg-neutral-950 text-neutral-100">
 
             {/* Sticky Navbar — full width */}
